@@ -28,7 +28,12 @@ class QuoteController extends BaseController
                 ->setMessage(trans('plugins/handmade-workflow::handmade-workflow.errors.quote_locked'));
         }
 
-        $this->quotes->save($order, $request->validated());
+        $data = $request->validated();
+
+        // Line prices drive the product cost; they are saved onto the order items too.
+        $data['product_cost'] = $this->quotes->applyItemPrices($order, $data['items']);
+
+        $this->quotes->save($order, $data);
 
         return $this->httpResponse()
             ->setPreviousUrl(route('orders.edit', $order->getKey()))

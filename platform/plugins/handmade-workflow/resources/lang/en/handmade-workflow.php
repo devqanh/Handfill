@@ -74,7 +74,10 @@ return [
     'quote' => [
         'title' => 'Quote',
         'customer_title' => 'Order quote',
-        'product_cost' => 'Product cost',
+        'items_heading' => 'Price per item',
+        'unit_price' => 'Unit price',
+        'line_total' => 'Line total',
+        'product_cost' => 'Products subtotal',
         'shipping_cost' => 'Shipping cost',
         'shipping_help' => 'Leave at 0 when the customer arranges delivery. Fill it in only when we buy the label for them.',
         'fulfill_fee' => 'Fulfilment fee',

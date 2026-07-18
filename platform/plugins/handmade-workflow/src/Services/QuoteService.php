@@ -59,6 +59,41 @@ class QuoteService
     }
 
     /**
+     * Write the per-line unit prices onto the order items and return the resulting
+     * product cost. Staff price each handmade piece separately, so the order total is
+     * always the sum of its lines rather than a typed-in lump sum.
+     *
+     * @param  array<int, array{id: int|string, price: float|string}>  $items
+     */
+    public function applyItemPrices(Order $order, array $items): float
+    {
+        $prices = [];
+
+        foreach ($items as $item) {
+            $prices[(int) $item['id']] = (float) $item['price'];
+        }
+
+        $productCost = 0.0;
+
+        foreach ($order->products as $product) {
+            if (! array_key_exists($product->getKey(), $prices)) {
+                // Line not submitted (e.g. stale form) — keep whatever it already had.
+                $productCost += (float) $product->price * (int) $product->qty;
+
+                continue;
+            }
+
+            $price = $prices[$product->getKey()];
+
+            $product->forceFill(['price' => $price])->saveQuietly();
+
+            $productCost += $price * (int) $product->qty;
+        }
+
+        return round($productCost, 2);
+    }
+
+    /**
      * @param  array{product_cost: float, shipping_cost: float, fulfill_fee: float, packing_fee: float, expected_delivery_date?: string|null, note?: string|null}  $data
      */
     public function save(Order $order, array $data): OrderQuote

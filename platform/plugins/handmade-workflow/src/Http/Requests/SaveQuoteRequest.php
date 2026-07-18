@@ -9,7 +9,10 @@ class SaveQuoteRequest extends Request
     public function rules(): array
     {
         return [
-            'product_cost' => ['required', 'numeric', 'min:0', 'max:99999999999'],
+            // Per-line unit prices. product_cost is derived from these, never typed directly.
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.id' => ['required', 'integer'],
+            'items.*.price' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'shipping_cost' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'fulfill_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'packing_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],

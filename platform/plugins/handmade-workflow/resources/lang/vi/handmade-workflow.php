@@ -74,7 +74,10 @@ return [
     'quote' => [
         'title' => 'Báo giá',
         'customer_title' => 'Báo giá đơn hàng',
-        'product_cost' => 'Phí sản phẩm',
+        'items_heading' => 'Giá từng mẫu',
+        'unit_price' => 'Đơn giá',
+        'line_total' => 'Thành tiền',
+        'product_cost' => 'Tổng tiền sản phẩm',
         'shipping_cost' => 'Phí vận chuyển',
         'shipping_help' => 'Để 0 nếu khách tự lo vận chuyển. Chỉ nhập khi mình mua label hộ khách.',
         'fulfill_fee' => 'Phí fulfill',

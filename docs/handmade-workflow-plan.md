@@ -237,6 +237,9 @@ Chi tiết cả hai bẫy nằm trong `docs/botble-plugin-guide.md`.
 - **Admin có hướng dẫn luồng**: mỗi bước hiện "việc cần làm", danh sách 10 bước kèm nhãn ai thao tác, và cảnh báo rõ 2 bước **nhân viên không chuyển được** (Đã cọc / Xác nhận) vì phải chờ khách thanh toán.
 - **Danh sách đơn của khách**: thêm nhãn **Đặt theo yêu cầu / Sản phẩm có sẵn** và hiện **trạng thái sản xuất** thay cho trạng thái core. Làm bằng `View::prependNamespace('plugins/ecommerce', ...)` để override view **từ trong plugin** (view này của ecommerce không có hook per-order). ⚠️ Nếu ecommerce cập nhật view danh sách đơn, phải đồng bộ lại bản copy trong `resources/views/overrides/`.
 - **Sửa giá & gửi lại báo giá**: nhân viên sửa và gửi lại bao nhiêu lần cũng được khi đơn còn ở "Chờ duyệt"; mỗi lần ghi một dòng lịch sử (`handmade_quote_sent`) kèm chi tiết các khoản. Admin thấy "đã gửi X lần, đang chờ khách duyệt". Khách luôn thấy **giá mới nhất**. Sau khi khách duyệt + trừ cọc thì báo giá **khoá lại**.
+- **Báo giá theo TỪNG MẪU** (thay cho một ô "phí sản phẩm" gộp): bảng liệt kê từng mẫu với số lượng và ô nhập **đơn giá**, tự tính thành tiền từng dòng. Tổng tiền sản phẩm = tổng các dòng, **không nhập tay**. Giá được ghi thẳng vào `ec_order_product.price` nên hoá đơn và trang khách đều đúng.
+  - Có khối tổng kết **tính trực tiếp khi gõ**: tổng SP → tổng cộng → tiền cọc → còn lại, để nhân viên thấy số cọc trước khi bấm gửi. Công thức JS khớp đúng công thức máy chủ (cọc = 50% SP + ship; còn lại = tổng − cọc).
+  - Dòng nào không gửi lên (form cũ/lệch) thì **giữ nguyên giá cũ**, không bị reset về 0.
 
 ### Giai đoạn 4 sẽ làm
 Đồng bộ Lark 2 chiều: đẩy đơn + ảnh lên Base khi tạo/đổi trạng thái (đã có sẵn client), thêm `updateRecord()`, và bổ sung các cột còn thiếu trong Base.
