@@ -14,11 +14,15 @@
     ];
     $waitingOnCustomer = array_key_exists($current, $customerDrivenNext);
 
-    // Staff may still cancel while waiting on the customer.
-    $staffOptions = array_values(array_filter(
+    // Cancelling is a separate, destructive action — never an option in the
+    // "move to next step" list, otherwise a waiting order looks like it is
+    // being pushed towards cancellation.
+    $nextSteps = $waitingOnCustomer ? [] : array_values(array_filter(
         $allowed,
-        fn (string $status) => ! $waitingOnCustomer || $status === ProductionStatusEnum::CANCELED
+        fn (string $status) => $status !== ProductionStatusEnum::CANCELED
     ));
+
+    $canCancel = in_array(ProductionStatusEnum::CANCELED, $allowed, true);
 @endphp
 
 <x-core::card class="mt-3">
@@ -105,11 +109,7 @@
             </ol>
         </details>
 
-        @if (empty($staffOptions))
-            <p class="text-muted mb-0">
-                {{ trans('plugins/handmade-workflow::handmade-workflow.no_further_steps') }}
-            </p>
-        @else
+        @if ($nextSteps)
             <x-core::form
                 :url="route('handmade-workflow.update-status', $order->getKey())"
                 method="POST"
@@ -119,11 +119,20 @@
                     <label class="form-label" for="production_status">
                         {{ trans('plugins/handmade-workflow::handmade-workflow.move_to') }}
                     </label>
-                    <select name="production_status" id="production_status" class="form-select">
-                        @foreach ($staffOptions as $status)
-                            <option value="{{ $status }}">{{ ProductionStatusEnum::of($status)->label() }}</option>
-                        @endforeach
-                    </select>
+                    @if (count($nextSteps) === 1)
+                        {{-- A single path forward: show it as a plain label, not a one-item dropdown. --}}
+                        <input type="hidden" name="production_status" value="{{ $nextSteps[0] }}">
+                        <div class="form-control-plaintext fw-semibold">
+                            <x-core::icon name="ti ti-arrow-right" class="text-primary me-1" />
+                            {{ ProductionStatusEnum::of($nextSteps[0])->label() }}
+                        </div>
+                    @else
+                        <select name="production_status" id="production_status" class="form-select">
+                            @foreach ($nextSteps as $status)
+                                <option value="{{ $status }}">{{ ProductionStatusEnum::of($status)->label() }}</option>
+                            @endforeach
+                        </select>
+                    @endif
                 </div>
 
                 <div class="mb-2">
@@ -138,6 +147,35 @@
                     {{ trans('plugins/handmade-workflow::handmade-workflow.update_status') }}
                 </x-core::button>
             </x-core::form>
+        @elseif (! $waitingOnCustomer)
+            <p class="text-muted">
+                {{ trans('plugins/handmade-workflow::handmade-workflow.no_further_steps') }}
+            </p>
+        @endif
+
+        @if ($canCancel)
+            <div class="border-top mt-3 pt-3">
+                <x-core::form
+                    :url="route('handmade-workflow.update-status', $order->getKey())"
+                    method="POST"
+                    class="mb-0"
+                    onsubmit="return confirm('{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_cancel') }}')"
+                >
+                    <input type="hidden" name="production_status" value="{{ ProductionStatusEnum::CANCELED }}">
+
+                    <input
+                        type="text"
+                        name="note"
+                        class="form-control form-control-sm mb-2"
+                        placeholder="{{ trans('plugins/handmade-workflow::handmade-workflow.cancel_reason') }}"
+                    >
+
+                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                        <x-core::icon name="ti ti-circle-x" class="me-1" />
+                        {{ trans('plugins/handmade-workflow::handmade-workflow.cancel_order') }}
+                    </button>
+                </x-core::form>
+            </div>
         @endif
     </x-core::card.body>
 </x-core::card>

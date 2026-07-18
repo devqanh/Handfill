@@ -42,9 +42,12 @@ return [
     'who_acts' => 'Người thao tác',
     'waiting_customer' => 'Bước này do KHÁCH thực hiện — nhân viên không chuyển được. Khách phải bấm nút trong trang đơn hàng của họ.',
     'next_action' => 'Việc cần làm ở bước này',
+    'confirm_cancel' => 'Bạn chắc chắn muốn huỷ đơn hàng này? Thao tác này không thể hoàn tác.',
+    'cancel_reason' => 'Lý do huỷ (không bắt buộc)',
+    'cancel_order' => 'Huỷ đơn hàng',
 
     'guides' => [
-        'pending_approval' => 'Xem ảnh mẫu khách gửi, xác định có sản xuất được không và ngày giao có khả thi không, sau đó nhập báo giá ở thẻ "Báo giá". Khách duyệt giá và bị trừ tiền cọc thì đơn mới sang bước sau.',
+        'pending_approval' => 'Xem ảnh mẫu khách gửi, xác định có sản xuất được không và ngày giao có khả thi không. Sau đó nhập đơn giá từng mẫu ngay trong bảng sản phẩm ở trên, điền các loại phí rồi bấm "Lưu & gửi báo giá". Khách duyệt giá và bị trừ tiền cọc thì đơn mới sang bước sau.',
         'deposited' => 'Đã thu tiền cọc. Mua label vận chuyển (nếu khách nhờ), rồi chuyển sang "Chuẩn bị sản xuất".',
         'preparing' => 'Chuẩn bị nguyên vật liệu và xếp lịch, sẵn sàng thì chuyển sang "Đang sản xuất".',
         'producing' => 'Đang làm hàng. Xong thì chuyển sang "Sản xuất xong".',
@@ -74,6 +77,7 @@ return [
     'quote' => [
         'title' => 'Báo giá',
         'customer_title' => 'Báo giá đơn hàng',
+        'edit_in_main_panel' => 'Nhập giá từng mẫu ở bảng sản phẩm bên trái, rồi bấm "Lưu & gửi báo giá".',
         'items_heading' => 'Giá từng mẫu',
         'unit_price' => 'Đơn giá',
         'line_total' => 'Thành tiền',

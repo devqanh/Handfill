@@ -42,6 +42,9 @@ return [
     'who_acts' => 'Who acts',
     'waiting_customer' => 'This step is taken by the CUSTOMER — staff cannot move it. The customer must press the button on their order page.',
     'next_action' => 'What to do at this step',
+    'confirm_cancel' => 'Are you sure you want to cancel this order? This cannot be undone.',
+    'cancel_reason' => 'Cancellation reason (optional)',
+    'cancel_order' => 'Cancel order',
 
     'guides' => [
         'pending_approval' => 'Review the reference photos, decide whether it can be made and whether the requested date is feasible, then fill in the quote card. The order only advances once the customer accepts the quote and the deposit is charged.',
@@ -74,6 +77,7 @@ return [
     'quote' => [
         'title' => 'Quote',
         'customer_title' => 'Order quote',
+        'edit_in_main_panel' => 'Set each item price in the products table on the left, then press "Save & send quote".',
         'items_heading' => 'Price per item',
         'unit_price' => 'Unit price',
         'line_total' => 'Line total',
