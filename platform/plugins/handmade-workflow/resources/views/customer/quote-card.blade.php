@@ -111,12 +111,58 @@
             </div>
 
             @if ($balance >= $due)
-                <x-core::form :url="route('customer.handmade-orders.' . $action, $order->getKey())" method="POST" class="mb-0">
-                    <button type="submit" class="btn btn-primary">
+                {{-- Money leaves the wallet on submit, so always confirm first. --}}
+                <x-core::form
+                    :url="route('customer.handmade-orders.' . $action, $order->getKey())"
+                    method="POST"
+                    class="mb-0"
+                    id="hw-pay-form"
+                >
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#hw-pay-modal">
                         <x-core::icon name="ti ti-check" class="me-1" />
                         {{ trans('plugins/handmade-workflow::handmade-workflow.quote.' . str_replace('-', '_', $action)) }}
                     </button>
                 </x-core::form>
+
+                <div class="modal fade" id="hw-pay-modal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">
+                                    {{ trans('plugins/handmade-workflow::handmade-workflow.quote.confirm_payment_title') }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p class="mb-2">
+                                    {{ trans('plugins/handmade-workflow::handmade-workflow.quote.confirm_payment_body', [
+                                        'amount' => format_price($due),
+                                    ]) }}
+                                </p>
+                                <div class="d-flex justify-content-between">
+                                    <span class="text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.wallet_balance') }}</span>
+                                    <span>{{ format_price($balance) }} → <strong>{{ format_price($balance - $due) }}</strong></span>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                                    {{ trans('core/base::tables.cancel') }}
+                                </button>
+                                <button type="button" class="btn btn-primary" id="hw-pay-confirm">
+                                    <x-core::icon name="ti ti-check" class="me-1" />
+                                    {{ trans('plugins/handmade-workflow::handmade-workflow.quote.confirm_payment_submit') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.getElementById('hw-pay-confirm').addEventListener('click', function () {
+                        this.disabled = true
+                        document.getElementById('hw-pay-form').submit()
+                    })
+                </script>
             @else
                 <div class="alert alert-warning">
                     <p class="mb-2">
