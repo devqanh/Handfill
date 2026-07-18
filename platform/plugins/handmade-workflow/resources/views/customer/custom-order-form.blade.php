@@ -168,6 +168,17 @@
 
                     <div class="col-12">
                         <label class="form-label">
+                            {{ trans('plugins/handmade-workflow::handmade-workflow.item_marketplace_id') }}
+                        </label>
+                        <input type="text" class="form-control" data-name="marketplace_id"
+                            placeholder="{{ trans('plugins/handmade-workflow::handmade-workflow.item_marketplace_id_placeholder') }}">
+                        <small class="text-muted">
+                            {{ trans('plugins/handmade-workflow::handmade-workflow.item_marketplace_id_help') }}
+                        </small>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label">
                             {{ trans('plugins/handmade-workflow::handmade-workflow.item_images') }}
                             <span class="text-danger">*</span>
                         </label>

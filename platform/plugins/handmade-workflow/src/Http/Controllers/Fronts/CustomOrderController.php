@@ -68,6 +68,7 @@ class CustomOrderController extends Controller
                 'name' => $item['name'],
                 'note' => $item['note'] ?? null,
                 'qty' => $item['qty'],
+                'marketplace_id' => $item['marketplace_id'] ?? null,
                 'images' => $request->file("items.{$index}.images", []),
             ];
         }

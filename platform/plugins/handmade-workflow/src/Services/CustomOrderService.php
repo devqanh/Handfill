@@ -42,6 +42,7 @@ class CustomOrderService
                 'name' => $item['name'],
                 'note' => $item['note'] ?? null,
                 'qty' => (int) $item['qty'],
+                'marketplace_id' => $item['marketplace_id'] ?? null,
                 'images' => $this->uploadImages($item['images'] ?? []),
             ];
         }
@@ -92,6 +93,7 @@ class CustomOrderService
                         'handmade' => [
                             'is_custom' => true,
                             'note' => $item['note'],
+                            'marketplace_id' => $item['marketplace_id'] ?? null,
                             'images' => $item['images'],
                         ],
                     ],

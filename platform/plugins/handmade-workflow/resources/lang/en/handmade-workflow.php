@@ -169,6 +169,9 @@ return [
     'order_type_catalog' => 'Catalogue product',
     'remove_item' => 'Remove this item',
     'add_item' => 'Add item',
+    'item_marketplace_id' => 'Marketplace ID (Amazon / Etsy...)',
+    'item_marketplace_id_placeholder' => 'e.g. B08XYZ1234 or 1234567890',
+    'item_marketplace_id_help' => 'The listing ID on the marketplace you sell on, for matching at fulfilment (optional).',
     'max_items_hint' => 'Up to :max items per order.',
     'too_many_images' => 'You can select at most :max photos per item.',
 

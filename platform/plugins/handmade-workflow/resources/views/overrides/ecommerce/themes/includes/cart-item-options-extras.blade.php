@@ -18,6 +18,15 @@
 @php $handmade = Arr::get($options, 'handmade'); @endphp
 
 @if ($handmade && ! empty($handmade['is_custom']))
+    @if (! empty($handmade['marketplace_id']))
+        <p class="mb-1">
+            <small>
+                {{ trans('plugins/handmade-workflow::handmade-workflow.item_marketplace_id') }}:
+                <strong>{{ $handmade['marketplace_id'] }}</strong>
+            </small>
+        </p>
+    @endif
+
     @if (! empty($handmade['note']))
         <p class="mb-1">
             <small class="text-muted">{{ $handmade['note'] }}</small>

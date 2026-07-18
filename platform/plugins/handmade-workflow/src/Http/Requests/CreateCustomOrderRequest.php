@@ -30,6 +30,7 @@ class CreateCustomOrderRequest extends Request
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.note' => ['nullable', 'string', 'max:1000'],
             'items.*.qty' => ['required', 'integer', 'min:1', 'max:10000'],
+            'items.*.marketplace_id' => ['nullable', 'string', 'max:100'],
             'items.*.images' => ['required', 'array', 'min:1', 'max:' . self::MAX_IMAGES_PER_ITEM],
             'items.*.images.*' => ['required', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ];
