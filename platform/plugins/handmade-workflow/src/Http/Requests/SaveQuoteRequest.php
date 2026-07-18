@@ -13,6 +13,7 @@ class SaveQuoteRequest extends Request
             'items' => ['required', 'array', 'min:1'],
             'items.*.id' => ['required', 'integer'],
             'items.*.price' => ['required', 'numeric', 'min:0', 'max:99999999999'],
+            'items.*.qty' => ['nullable', 'integer', 'min:1', 'max:100000'],
             'shipping_cost' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'fulfill_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'packing_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],

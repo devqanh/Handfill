@@ -129,8 +129,21 @@
                 <x-core::table.body.cell>
                     x
                 </x-core::table.body.cell>
-                <x-core::table.body.cell>
-                    {{ $orderProduct->qty }}
+                <x-core::table.body.cell style="width: 90px">
+                    @if ($hwEditable)
+                        {{-- Editable so staff can fix a quantity the customer got wrong --}}
+                        <input
+                            type="number"
+                            step="1"
+                            min="1"
+                            class="form-control form-control-sm hw-item-qty"
+                            data-hw-item-id="{{ $orderProduct->getKey() }}"
+                            value="{{ (int) $orderProduct->qty }}"
+                            aria-label="{{ trans('plugins/handmade-workflow::handmade-workflow.item_qty') }}"
+                        >
+                    @else
+                        {{ $orderProduct->qty }}
+                    @endif
                 </x-core::table.body.cell>
                 <x-core::table.body.cell class="hw-line-total">
                     {{ format_price($orderProduct->price * $orderProduct->qty) }}
@@ -258,11 +271,15 @@
                 let products = 0
 
                 priceInputs().forEach((input) => {
-                    const qty = parseInt(input.dataset.hwQty || 0, 10)
+                    const row = input.closest('tr')
+                    const qtyInput = row?.querySelector('.hw-item-qty')
+                    const qty = qtyInput
+                        ? (parseInt(qtyInput.value, 10) || 0)
+                        : parseInt(input.dataset.hwQty || 0, 10)
                     const line = num(input) * qty
                     products += line
 
-                    const cell = input.closest('tr')?.querySelector('.hw-line-total')
+                    const cell = row?.querySelector('.hw-line-total')
                     if (cell) cell.textContent = fmt(line)
                 })
 
@@ -281,7 +298,7 @@
             }
 
             document.addEventListener('input', (e) => {
-                if (e.target.matches('.hw-item-price, .hw-fee')) recalc()
+                if (e.target.matches('.hw-item-price, .hw-item-qty, .hw-fee')) recalc()
             })
 
             document.getElementById('hw-send-quote').addEventListener('click', function () {
@@ -290,6 +307,7 @@
                     items: Array.from(priceInputs()).map((input) => ({
                         id: input.dataset.hwItemId,
                         price: num(input),
+                        qty: parseInt(input.closest('tr')?.querySelector('.hw-item-qty')?.value || 0, 10) || null,
                     })),
                     shipping_cost: num(document.getElementById('hw_shipping_cost')),
                     fulfill_fee: num(document.getElementById('hw_fulfill_fee')),

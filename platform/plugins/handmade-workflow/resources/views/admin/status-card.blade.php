@@ -7,9 +7,11 @@
     $flow = ProductionStatusEnum::flow();
     $totalSteps = count($flow);
 
-    // The two paid steps are entered by the customer, never by staff.
+    // The two paid steps are entered by the customer paying from their wallet,
+    // never by staff. Keep this in step with the flow: the deposit follows
+    // "Quote sent", not "Pending approval".
     $customerDrivenNext = [
-        ProductionStatusEnum::PENDING_APPROVAL => ProductionStatusEnum::DEPOSITED,
+        ProductionStatusEnum::QUOTED => ProductionStatusEnum::DEPOSITED,
         ProductionStatusEnum::AWAITING_CONFIRMATION => ProductionStatusEnum::CONFIRMED,
     ];
     $waitingOnCustomer = array_key_exists($current, $customerDrivenNext);
@@ -63,11 +65,12 @@
                     ['deposit', $quote->deposit_amount, $quote->isDepositPaid()],
                     ['final', $quote->final_amount, $quote->isFinalPaid()],
                 ] as [$key, $amount, $paid])
-                    <div @class(['d-flex justify-content-between align-items-center', 'mb-1' => ! $loop->last])>
+                    <div @class(['d-flex justify-content-between align-items-center gap-2', 'mb-2' => ! $loop->last])>
                         <span class="text-muted">
                             {{ trans("plugins/handmade-workflow::handmade-workflow.quote.$key") }}
                         </span>
-                        <span>
+                        {{-- gap keeps the badge clear of the amount instead of butting against it --}}
+                        <span class="d-flex align-items-center gap-2 flex-shrink-0">
                             <strong>{{ format_price($amount) }}</strong>
                             <span class="badge bg-{{ $paid ? 'success' : 'warning' }}">
                                 {{ $paid

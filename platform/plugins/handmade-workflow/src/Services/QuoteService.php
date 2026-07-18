@@ -67,27 +67,30 @@ class QuoteService
      */
     public function applyItemPrices(Order $order, array $items): float
     {
-        $prices = [];
+        $submitted = [];
 
         foreach ($items as $item) {
-            $prices[(int) $item['id']] = (float) $item['price'];
+            $submitted[(int) $item['id']] = $item;
         }
 
         $productCost = 0.0;
 
         foreach ($order->products as $product) {
-            if (! array_key_exists($product->getKey(), $prices)) {
+            if (! array_key_exists($product->getKey(), $submitted)) {
                 // Line not submitted (e.g. stale form) — keep whatever it already had.
                 $productCost += (float) $product->price * (int) $product->qty;
 
                 continue;
             }
 
-            $price = $prices[$product->getKey()];
+            $item = $submitted[$product->getKey()];
+            $price = (float) $item['price'];
+            // Staff may correct a quantity the customer got wrong; blank keeps the old one.
+            $qty = ! empty($item['qty']) ? max(1, (int) $item['qty']) : (int) $product->qty;
 
-            $product->forceFill(['price' => $price])->saveQuietly();
+            $product->forceFill(['price' => $price, 'qty' => $qty])->saveQuietly();
 
-            $productCost += $price * (int) $product->qty;
+            $productCost += $price * $qty;
         }
 
         return round($productCost, 2);
