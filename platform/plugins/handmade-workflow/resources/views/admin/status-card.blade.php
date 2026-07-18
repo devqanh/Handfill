@@ -141,27 +141,8 @@
                 :url="route('handmade-workflow.update-status', $order->getKey())"
                 method="POST"
                 class="mb-0"
+                id="hw-status-form"
             >
-                <div class="mb-2">
-                    <label class="form-label" for="production_status">
-                        {{ trans('plugins/handmade-workflow::handmade-workflow.move_to') }}
-                    </label>
-                    @if (count($nextSteps) === 1)
-                        {{-- A single path forward: show it as a plain label, not a one-item dropdown. --}}
-                        <input type="hidden" name="production_status" value="{{ $nextSteps[0] }}">
-                        <div class="form-control-plaintext fw-semibold">
-                            <x-core::icon name="ti ti-arrow-right" class="text-primary me-1" />
-                            {{ ProductionStatusEnum::of($nextSteps[0])->label() }}
-                        </div>
-                    @else
-                        <select name="production_status" id="production_status" class="form-select">
-                            @foreach ($nextSteps as $status)
-                                <option value="{{ $status }}">{{ ProductionStatusEnum::of($status)->label() }}</option>
-                            @endforeach
-                        </select>
-                    @endif
-                </div>
-
                 <div class="mb-2">
                     <label class="form-label" for="production_note">
                         {{ trans('plugins/handmade-workflow::handmade-workflow.note') }}
@@ -170,9 +151,27 @@
                         placeholder="{{ trans('plugins/handmade-workflow::handmade-workflow.note_placeholder') }}"></textarea>
                 </div>
 
-                <x-core::button type="submit" color="primary" icon="ti ti-arrow-right">
-                    {{ trans('plugins/handmade-workflow::handmade-workflow.update_status') }}
-                </x-core::button>
+                <label class="form-label">
+                    {{ trans('plugins/handmade-workflow::handmade-workflow.move_to') }}
+                </label>
+
+                {{-- One button per possible step: the operator sees where the order can go
+                     and confirms before it moves. --}}
+                <div class="d-flex flex-wrap gap-2">
+                    @foreach ($nextSteps as $status)
+                        @php $stepLabel = ProductionStatusEnum::of($status)->label(); @endphp
+                        <button
+                            type="submit"
+                            name="production_status"
+                            value="{{ $status }}"
+                            class="btn btn-primary"
+                            onclick="return confirm('{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_move', ['step' => $stepLabel]) }}')"
+                        >
+                            <x-core::icon name="ti ti-arrow-right" class="me-1" />
+                            {{ $stepLabel }}
+                        </button>
+                    @endforeach
+                </div>
             </x-core::form>
         @elseif (! $waitingOnCustomer)
             <p class="text-muted">
@@ -215,6 +214,12 @@
     Runs synchronously — both targets already exist at this point — so there is
     no visible jump.
 --}}
+{{-- Cards from different plugins land in the sidebar with no shared spacing rule,
+     so consecutive ones end up touching. --}}
+<style>
+    .row-cards > .col-md-3 > .card + .card { margin-top: 1rem; }
+</style>
+
 <script>
     (function () {
         const statusCard = document.getElementById('hw-status-card')

@@ -17,6 +17,7 @@ return [
 
     'statuses' => [
         'pending_approval' => 'Chờ duyệt',
+        'quoted' => 'Đã báo giá',
         'deposited' => 'Đã cọc',
         'preparing' => 'Chuẩn bị sản xuất',
         'producing' => 'Đang sản xuất',
@@ -45,9 +46,11 @@ return [
     'confirm_cancel' => 'Bạn chắc chắn muốn huỷ đơn hàng này? Thao tác này không thể hoàn tác.',
     'cancel_reason' => 'Lý do huỷ (không bắt buộc)',
     'cancel_order' => 'Huỷ đơn hàng',
+    'confirm_move' => 'Xác nhận chuyển đơn sang bước ":step"?',
 
     'guides' => [
         'pending_approval' => 'Xem ảnh mẫu khách gửi, xác định có sản xuất được không và ngày giao có khả thi không. Sau đó nhập đơn giá từng mẫu ngay trong bảng sản phẩm ở trên, điền các loại phí rồi bấm "Lưu & gửi báo giá". Khách duyệt giá và bị trừ tiền cọc thì đơn mới sang bước sau.',
+        'quoted' => 'Đã gửi báo giá, đang chờ khách duyệt. Khách có thể góp ý để mình báo giá lại.',
         'deposited' => 'Đã thu tiền cọc. Mua label vận chuyển (nếu khách nhờ), rồi chuyển sang "Chuẩn bị sản xuất".',
         'preparing' => 'Chuẩn bị nguyên vật liệu và xếp lịch, sẵn sàng thì chuyển sang "Đang sản xuất".',
         'producing' => 'Đang làm hàng. Xong thì chuyển sang "Sản xuất xong".',
@@ -109,6 +112,10 @@ return [
         'accept_quote' => 'Duyệt báo giá & đặt cọc',
         'confirm_product' => 'Xác nhận thành phẩm & thanh toán',
         'top_up_now' => 'Nạp tiền vào ví',
+        'request_changes' => 'Gửi phản hồi báo giá',
+        'request_changes_intro' => 'Chưa hài lòng với báo giá? Gửi góp ý để chúng tôi báo giá lại.',
+        'request_changes_placeholder' => 'Ví dụ: giá cao hơn dự kiến, muốn đổi chất liệu, cần giao sớm hơn...',
+        'feedback_sent' => 'Đã gửi phản hồi. Chúng tôi sẽ xem lại và báo giá lại cho bạn.',
     ],
 
     'payment' => [
@@ -146,6 +153,7 @@ return [
     'item_note' => 'Ghi chú cho mẫu này',
     'item_note_placeholder' => 'Mô tả chi tiết: kích thước, màu sắc, chất liệu, chữ khắc...',
     'general_info' => 'Thông tin chung',
+    'view_photo' => 'Xem ảnh',
     'shipping_address' => 'Địa chỉ nhận hàng',
     'shipping_address_help' => 'Chọn từ sổ địa chỉ của bạn.',
     'manage_addresses' => 'Quản lý địa chỉ',

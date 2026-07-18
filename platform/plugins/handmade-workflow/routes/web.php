@@ -33,6 +33,10 @@ Theme::registerRoutes(function (): void {
                 Route::post('{order}/confirm-product', [CustomerQuoteController::class, 'confirmProduct'])
                     ->where('order', '[0-9]+')
                     ->name('confirm-product');
+
+                Route::post('{order}/request-changes', [CustomerQuoteController::class, 'requestChanges'])
+                    ->where('order', '[0-9]+')
+                    ->name('request-changes');
             });
     });
 });
@@ -41,15 +45,20 @@ AdminHelper::registerRoutes(function (): void {
     Route::prefix('handmade-workflow')
         ->name('handmade-workflow.')
         ->group(function (): void {
-            Route::post('orders/{order}/production-status', [ProductionStatusController::class, 'update'])
-                ->where('order', '[0-9]+')
-                ->middleware('permission:handmade-workflow.update-status')
-                ->name('update-status');
+            // Botble reads permissions from the route's `permission` key — there is no
+            // `permission` middleware alias, so ->middleware('permission:...') throws
+            // "Target class [permission] does not exist" the moment the route is hit.
+            Route::post('orders/{order}/production-status', [
+                'as' => 'update-status',
+                'uses' => ProductionStatusController::class . '@update',
+                'permission' => 'handmade-workflow.update-status',
+            ])->where('order', '[0-9]+');
 
-            Route::post('orders/{order}/quote', [QuoteController::class, 'store'])
-                ->where('order', '[0-9]+')
-                ->middleware('permission:handmade-workflow.quote')
-                ->name('quote');
+            Route::post('orders/{order}/quote', [
+                'as' => 'quote',
+                'uses' => QuoteController::class . '@store',
+                'permission' => 'handmade-workflow.quote',
+            ])->where('order', '[0-9]+');
 
             Route::group(['prefix' => 'settings', 'permission' => 'handmade-workflow.index'], function (): void {
                 Route::get('/', [HandmadeSettingController::class, 'edit'])->name('settings');

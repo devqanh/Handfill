@@ -9,6 +9,7 @@ use Botble\HandmadeWorkflow\Enums\ProductionStatusEnum;
 use Botble\HandmadeWorkflow\Models\OrderQuote;
 use Botble\HandmadeWorkflow\Services\MilestonePaymentService;
 use Botble\HandmadeWorkflow\Services\ProductionWorkflow;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class CustomerQuoteController extends Controller
         return $this->settle(
             $orderId,
             $response,
-            ProductionStatusEnum::PENDING_APPROVAL,
+            ProductionStatusEnum::QUOTED,
             ProductionStatusEnum::DEPOSITED,
             MilestonePaymentService::MILESTONE_DEPOSIT,
             'quote_accepted',
@@ -52,6 +53,36 @@ class CustomerQuoteController extends Controller
             MilestonePaymentService::MILESTONE_FINAL,
             'product_confirmed'
         );
+    }
+
+    /**
+     * The customer is not happy with the quote: record their note and send the order
+     * back to the staff queue for re-pricing. No money moves.
+     */
+    public function requestChanges(int $orderId, Request $request, BaseHttpResponse $response)
+    {
+        $request->validate(['feedback' => ['required', 'string', 'max:1000']]);
+
+        $order = Order::query()
+            ->where('id', $orderId)
+            ->where('user_id', Auth::guard('customer')->id())
+            ->firstOrFail();
+
+        if ($this->workflow->currentStatus($order) !== ProductionStatusEnum::QUOTED) {
+            return $response
+                ->setError()
+                ->setMessage(trans('plugins/handmade-workflow::handmade-workflow.errors.wrong_step'));
+        }
+
+        $this->workflow->transition(
+            $order,
+            ProductionStatusEnum::PENDING_APPROVAL,
+            $request->input('feedback')
+        );
+
+        return $response
+            ->setNextUrl(route('customer.orders.view', $order->getKey()))
+            ->setMessage(trans('plugins/handmade-workflow::handmade-workflow.quote.feedback_sent'));
     }
 
     protected function settle(

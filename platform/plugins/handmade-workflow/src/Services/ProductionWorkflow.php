@@ -30,6 +30,8 @@ class ProductionWorkflow
 
             $transitions[$status] = array_values(array_filter([
                 $next,
+                // Quote negotiation: the customer can send the order back for re-quoting.
+                $status === ProductionStatusEnum::QUOTED ? ProductionStatusEnum::PENDING_APPROVAL : null,
                 $this->isCancelable($status) ? ProductionStatusEnum::CANCELED : null,
             ]));
         }

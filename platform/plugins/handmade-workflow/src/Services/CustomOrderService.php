@@ -80,7 +80,10 @@ class CustomOrderService
                     'order_id' => $order->getKey(),
                     'product_id' => null, // made-to-order: not tied to a catalogue product
                     'product_name' => $item['name'],
-                    'product_image' => $item['images'][0] ?? null,
+                    // Deliberately left empty: the reference photos are rendered as their
+                    // own gallery under the line. Setting it here would show the first
+                    // photo twice — once as the thumbnail, once in the gallery.
+                    'product_image' => null,
                     'qty' => $item['qty'],
                     'price' => 0, // set when HF quotes the order
                     'tax_amount' => 0,

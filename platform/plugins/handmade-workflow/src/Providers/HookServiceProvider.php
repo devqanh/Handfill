@@ -67,37 +67,51 @@ class HookServiceProvider extends ServiceProvider
             ])->render();
         }, 20, 2);
 
-        // Admin: each line's reference photos and note sit with that line in the
-        // products table — not in a separate sidebar card away from the item.
-        add_filter(ECOMMERCE_ORDER_DETAIL_EXTRA_HTML, function (?string $html, $orderProduct, ?Order $order = null): string {
-            $handmade = data_get($orderProduct->options, 'handmade');
-
-            if (! $handmade || empty($handmade['is_custom'])) {
-                return (string) $html;
-            }
-
-            return $html . view('plugins/handmade-workflow::admin.item-reference', [
-                'note' => $handmade['note'] ?? null,
-                'images' => $handmade['images'] ?? [],
-            ])->render();
-        }, 20, 3);
+        // NOTE: reference photos are rendered by the cart-item-options-extras override,
+        // which the admin products table includes too — so there is deliberately no
+        // ECOMMERCE_ORDER_DETAIL_EXTRA_HTML hook here. Adding one duplicates every photo.
 
         // Customer: production progress timeline + their own submitted photos.
         add_filter('ecommerce_customer_order_view_before_actions', function (?string $html, Order $order): string {
             $workflow = app(ProductionWorkflow::class);
             $current = $workflow->currentStatus($order);
 
-            $html .= view('plugins/handmade-workflow::customer.timeline', [
+            // Quote first: when it is the customer's turn to act, that is what they
+            // came for — progress is context, not the task.
+            $html .= $this->renderCustomerQuote($order, $current);
+
+            // Reference photos are rendered per line in the products list
+            // (cart-item-options-extras override), so no separate card here.
+            return $html . view('plugins/handmade-workflow::customer.timeline', [
                 'order' => $order,
                 'current' => $current,
                 'currentIndex' => ProductionStatusEnum::stepIndex($current),
                 'isCanceled' => $current === ProductionStatusEnum::CANCELED,
                 'stepTimes' => $this->stepTimestamps($order),
             ])->render();
+        }, 20, 2);
 
-            $html .= $this->renderCustomerQuote($order, $current);
+        // Admin order list: show the real production step. The table selects a fixed
+        // column list that excludes production_status, so it is looked up per row and
+        // memoised for the page rather than changing the core query.
+        add_filter(BASE_FILTER_GET_LIST_DATA, function ($data, $model = null) {
+            if (! $model instanceof Order || ! method_exists($data, 'editColumn')) {
+                return $data;
+            }
 
-            return $html . $this->renderCustomItems($order);
+            $cache = [];
+
+            return $data->editColumn('status', function ($item) use (&$cache) {
+                $status = $cache[$item->id] ??= Order::query()
+                    ->whereKey($item->id)
+                    ->value('production_status');
+
+                if (! $status || ! ProductionStatusEnum::isValid($status)) {
+                    return $item->status->toHtml();
+                }
+
+                return ProductionStatusEnum::of($status)->toHtml();
+            });
         }, 20, 2);
 
         // Customer account sidebar entry point for the made-to-order form.
@@ -152,7 +166,7 @@ class HookServiceProvider extends ServiceProvider
         }
 
         $action = match ($current) {
-            ProductionStatusEnum::PENDING_APPROVAL => 'accept-quote',
+            ProductionStatusEnum::QUOTED => 'accept-quote',
             ProductionStatusEnum::AWAITING_CONFIRMATION => 'confirm-product',
             default => null,
         };
@@ -162,21 +176,7 @@ class HookServiceProvider extends ServiceProvider
             'quote' => $quote,
             'action' => $action,
             'balance' => app(MilestonePaymentService::class)->balanceOf($order),
+            'customerGroup' => app(QuoteService::class)->customerGroup($order),
         ])->render();
-    }
-
-    protected function renderCustomItems(Order $order): string
-    {
-        if (! CustomOrderService::isCustomOrder($order)) {
-            return '';
-        }
-
-        $items = CustomOrderService::customItems($order);
-
-        if (! $items) {
-            return '';
-        }
-
-        return view('plugins/handmade-workflow::partials.custom-items', compact('order', 'items'))->render();
     }
 }

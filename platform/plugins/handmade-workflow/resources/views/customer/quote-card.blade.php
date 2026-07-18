@@ -4,10 +4,13 @@
 
 <div class="card border-0 mb-4">
     <div class="card-body">
-        <h5 class="card-title h6 mb-3">
-            <x-core::icon name="ti ti-receipt-2" class="me-1" />
-            {{ trans('plugins/handmade-workflow::handmade-workflow.quote.customer_title') }}
-        </h5>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <h5 class="card-title h6 mb-0">
+                <x-core::icon name="ti ti-receipt-2" class="me-1" />
+                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.customer_title') }}
+            </h5>
+            {!! \Botble\HandmadeWorkflow\Enums\CustomerGroupEnum::of($customerGroup)->toHtml() !!}
+        </div>
 
         @if ($action === 'accept-quote')
             <div class="alert alert-primary d-flex align-items-start gap-2">
@@ -115,7 +118,7 @@
                     </button>
                 </x-core::form>
             @else
-                <div class="alert alert-warning mb-0">
+                <div class="alert alert-warning">
                     <p class="mb-2">
                         {{ trans('plugins/handmade-workflow::handmade-workflow.errors.insufficient_balance', [
                             'shortfall' => format_price($due - $balance),
@@ -125,6 +128,29 @@
                         <x-core::icon name="ti ti-wallet" class="me-1" />
                         {{ trans('plugins/handmade-workflow::handmade-workflow.quote.top_up_now') }}
                     </a>
+                </div>
+            @endif
+
+            {{-- Negotiation: the customer can send the quote back with a note instead
+                 of accepting it. No money moves; staff re-price and send again. --}}
+            @if ($action === 'accept-quote')
+                <div class="border-top mt-3 pt-3">
+                    <p class="mb-2">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.request_changes_intro') }}</p>
+
+                    <x-core::form :url="route('customer.handmade-orders.request-changes', $order->getKey())" method="POST" class="mb-0">
+                        <textarea
+                            name="feedback"
+                            class="form-control mb-2"
+                            rows="3"
+                            required
+                            placeholder="{{ trans('plugins/handmade-workflow::handmade-workflow.quote.request_changes_placeholder') }}"
+                        ></textarea>
+
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">
+                            <x-core::icon name="ti ti-message-2" class="me-1" />
+                            {{ trans('plugins/handmade-workflow::handmade-workflow.quote.request_changes') }}
+                        </button>
+                    </x-core::form>
                 </div>
             @endif
         @endif

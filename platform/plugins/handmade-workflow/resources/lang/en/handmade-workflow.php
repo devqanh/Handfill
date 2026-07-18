@@ -17,6 +17,7 @@ return [
 
     'statuses' => [
         'pending_approval' => 'Pending approval',
+        'quoted' => 'Quote sent',
         'deposited' => 'Deposit paid',
         'preparing' => 'Preparing production',
         'producing' => 'In production',
@@ -45,9 +46,11 @@ return [
     'confirm_cancel' => 'Are you sure you want to cancel this order? This cannot be undone.',
     'cancel_reason' => 'Cancellation reason (optional)',
     'cancel_order' => 'Cancel order',
+    'confirm_move' => 'Move this order to ":step"?',
 
     'guides' => [
         'pending_approval' => 'Review the reference photos, decide whether it can be made and whether the requested date is feasible, then fill in the quote card. The order only advances once the customer accepts the quote and the deposit is charged.',
+        'quoted' => 'Quote sent, waiting for the customer. They may send feedback asking for a new price.',
         'deposited' => 'Deposit received. Buy the shipping label if the customer asked for it, then move to "Preparing production".',
         'preparing' => 'Prepare materials and schedule the work; move to "In production" when ready.',
         'producing' => 'Work in progress. Move to "Production finished" when done.',
@@ -109,6 +112,10 @@ return [
         'accept_quote' => 'Accept quote & pay deposit',
         'confirm_product' => 'Approve item & pay balance',
         'top_up_now' => 'Top up wallet',
+        'request_changes' => 'Send quote feedback',
+        'request_changes_intro' => 'Not happy with the quote? Send feedback and we will re-price it.',
+        'request_changes_placeholder' => 'e.g. higher than expected, different material, need it sooner...',
+        'feedback_sent' => 'Feedback sent. We will review and send you a new quote.',
     ],
 
     'payment' => [
@@ -146,6 +153,7 @@ return [
     'item_note' => 'Note for this item',
     'item_note_placeholder' => 'Details: size, colour, material, engraving...',
     'general_info' => 'General information',
+    'view_photo' => 'View photo',
     'shipping_address' => 'Delivery address',
     'shipping_address_help' => 'Pick one from your address book.',
     'manage_addresses' => 'Manage addresses',

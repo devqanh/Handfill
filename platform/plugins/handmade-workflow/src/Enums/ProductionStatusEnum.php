@@ -9,6 +9,7 @@ use Illuminate\Support\HtmlString;
 
 /**
  * @method static ProductionStatusEnum PENDING_APPROVAL()
+ * @method static ProductionStatusEnum QUOTED()
  * @method static ProductionStatusEnum DEPOSITED()
  * @method static ProductionStatusEnum PREPARING()
  * @method static ProductionStatusEnum PRODUCING()
@@ -23,6 +24,9 @@ use Illuminate\Support\HtmlString;
 class ProductionStatusEnum extends Enum
 {
     public const PENDING_APPROVAL = 'pending_approval';
+
+    /** Quote sent, waiting for the customer to accept or ask for changes. */
+    public const QUOTED = 'quoted';
 
     public const DEPOSITED = 'deposited';
 
@@ -64,6 +68,7 @@ class ProductionStatusEnum extends Enum
     {
         return [
             self::PENDING_APPROVAL,
+            self::QUOTED,
             self::DEPOSITED,
             self::PREPARING,
             self::PRODUCING,
@@ -93,7 +98,7 @@ class ProductionStatusEnum extends Enum
     public function toOrderStatus(): string
     {
         return match ($this->value) {
-            self::PENDING_APPROVAL => OrderStatusEnum::PENDING,
+            self::PENDING_APPROVAL, self::QUOTED => OrderStatusEnum::PENDING,
             self::COMPLETED => OrderStatusEnum::COMPLETED,
             self::CANCELED => OrderStatusEnum::CANCELED,
             default => OrderStatusEnum::PROCESSING,
@@ -104,6 +109,7 @@ class ProductionStatusEnum extends Enum
     {
         $color = match ($this->value) {
             self::PENDING_APPROVAL, self::AWAITING_CONFIRMATION => 'warning',
+            self::QUOTED => 'info',
             self::DEPOSITED, self::PREPARING, self::CONFIRMED, self::PACKING => 'info',
             self::COMPLETED => 'success',
             self::CANCELED => 'danger',
@@ -117,6 +123,7 @@ class ProductionStatusEnum extends Enum
     {
         return match ($this->value) {
             self::PENDING_APPROVAL => 'ti ti-file-search',
+            self::QUOTED => 'ti ti-file-invoice',
             self::DEPOSITED => 'ti ti-cash',
             self::PREPARING => 'ti ti-clipboard-list',
             self::PRODUCING => 'ti ti-tools',

@@ -99,6 +99,12 @@ class MilestonePaymentService
         $quote->forceFill([
             $milestone === self::MILESTONE_DEPOSIT ? 'deposit_paid_at' : 'final_paid_at' => now(),
         ])->save();
+
+        // Keep core order state in step with the workflow, so the built-in
+        // "Confirm order" strip does not keep asking for something already settled.
+        if ($milestone === self::MILESTONE_DEPOSIT && ! $order->is_confirmed) {
+            $order->forceFill(['is_confirmed' => 1])->saveQuietly();
+        }
     }
 
     public function isPaid(OrderQuote $quote, string $milestone): bool

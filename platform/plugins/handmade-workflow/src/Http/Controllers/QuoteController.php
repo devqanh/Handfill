@@ -21,7 +21,10 @@ class QuoteController extends BaseController
     public function store(Order $order, SaveQuoteRequest $request): BaseHttpResponse
     {
         // Re-pricing after the deposit is paid would silently change what the customer agreed to.
-        if ($this->workflow->currentStatus($order) !== ProductionStatusEnum::PENDING_APPROVAL) {
+        if (! in_array($this->workflow->currentStatus($order), [
+            ProductionStatusEnum::PENDING_APPROVAL,
+            ProductionStatusEnum::QUOTED,
+        ], true)) {
             return $this->httpResponse()
                 ->setError()
                 ->setCode(422)
@@ -34,6 +37,11 @@ class QuoteController extends BaseController
         $data['product_cost'] = $this->quotes->applyItemPrices($order, $data['items']);
 
         $this->quotes->save($order, $data);
+
+        // Sending a quote moves the order to "Quoted" — the customer's turn to respond.
+        if ($this->workflow->currentStatus($order) === ProductionStatusEnum::PENDING_APPROVAL) {
+            $this->workflow->transition($order, ProductionStatusEnum::QUOTED);
+        }
 
         return $this->httpResponse()
             ->setPreviousUrl(route('orders.edit', $order->getKey()))
