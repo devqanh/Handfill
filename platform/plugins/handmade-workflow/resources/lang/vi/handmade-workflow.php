@@ -77,6 +77,8 @@ return [
     'quote' => [
         'title' => 'Báo giá',
         'customer_title' => 'Báo giá đơn hàng',
+        'sent_banner' => 'Chúng tôi đã gửi báo giá cho đơn hàng này',
+        'sent_banner_help' => 'Vui lòng xem chi tiết các khoản phí bên dưới. Bấm "Duyệt báo giá & đặt cọc" để xác nhận — tiền cọc sẽ được trừ từ ví của bạn.',
         'edit_in_main_panel' => 'Nhập giá từng mẫu ở bảng sản phẩm bên trái, rồi bấm "Lưu & gửi báo giá".',
         'items_heading' => 'Giá từng mẫu',
         'unit_price' => 'Đơn giá',

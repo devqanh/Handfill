@@ -77,6 +77,8 @@ return [
     'quote' => [
         'title' => 'Quote',
         'customer_title' => 'Order quote',
+        'sent_banner' => 'We have sent you a quote for this order',
+        'sent_banner_help' => 'Please review the charges below. Press "Accept quote & pay deposit" to confirm — the deposit is charged to your wallet.',
         'edit_in_main_panel' => 'Set each item price in the products table on the left, then press "Save & send quote".',
         'items_heading' => 'Price per item',
         'unit_price' => 'Unit price',

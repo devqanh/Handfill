@@ -50,33 +50,37 @@ class HookServiceProvider extends ServiceProvider
         });
 
         // Admin: production status card on the order detail sidebar.
+        // Admin: one single sidebar card — workflow state, what to do next, the
+        // payment milestones and the cancel action, all in one place.
         add_filter('ecommerce_order_detail_sidebar_bottom', function (?string $html, Order $order): string {
             $workflow = app(ProductionWorkflow::class);
+            $quotes = app(QuoteService::class);
+            $quote = $quotes->quoteFor($order);
 
             return $html . view('plugins/handmade-workflow::admin.status-card', [
                 'order' => $order,
                 'current' => $workflow->currentStatus($order),
                 'allowed' => $workflow->allowedNextStatuses($order),
+                'quote' => $quote->exists ? $quote : null,
+                'customerGroup' => $quotes->customerGroup($order),
+                'isCustomOrder' => CustomOrderService::isCustomOrder($order),
             ])->render();
         }, 20, 2);
 
-        // Admin: quote card (enter prices, then a read-only breakdown once locked).
-        add_filter('ecommerce_order_detail_sidebar_bottom', function (?string $html, Order $order): string {
-            $quotes = app(QuoteService::class);
+        // Admin: each line's reference photos and note sit with that line in the
+        // products table — not in a separate sidebar card away from the item.
+        add_filter(ECOMMERCE_ORDER_DETAIL_EXTRA_HTML, function (?string $html, $orderProduct, ?Order $order = null): string {
+            $handmade = data_get($orderProduct->options, 'handmade');
 
-            return $html . view('plugins/handmade-workflow::admin.quote-card', [
-                'order' => $order,
-                'quote' => $quotes->withDefaults($order),
-                'customerGroup' => $quotes->customerGroup($order),
-                'locked' => app(ProductionWorkflow::class)->currentStatus($order) !== ProductionStatusEnum::PENDING_APPROVAL,
-                'timesQuoted' => $quotes->timesQuoted($order),
+            if (! $handmade || empty($handmade['is_custom'])) {
+                return (string) $html;
+            }
+
+            return $html . view('plugins/handmade-workflow::admin.item-reference', [
+                'note' => $handmade['note'] ?? null,
+                'images' => $handmade['images'] ?? [],
             ])->render();
-        }, 21, 2);
-
-        // Admin: the customer's reference photos, so HF can judge feasibility.
-        add_filter('ecommerce_order_detail_sidebar_bottom', function (?string $html, Order $order): string {
-            return $html . $this->renderCustomItems($order);
-        }, 22, 2);
+        }, 20, 3);
 
         // Customer: production progress timeline + their own submitted photos.
         add_filter('ecommerce_customer_order_view_before_actions', function (?string $html, Order $order): string {

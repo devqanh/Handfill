@@ -1,6 +1,6 @@
 @php
+    use Botble\HandmadeWorkflow\Enums\CustomerGroupEnum;
     use Botble\HandmadeWorkflow\Enums\ProductionStatusEnum;
-    use Botble\HandmadeWorkflow\Services\MilestonePaymentService;
 
     $currentEnum = ProductionStatusEnum::of($current);
     $currentIndex = ProductionStatusEnum::stepIndex($current);
@@ -34,15 +34,18 @@
     </x-core::card.header>
 
     <x-core::card.body>
-        <div class="mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
             {!! $currentEnum->toHtml() !!}
             @if ($currentIndex !== null)
-                <span class="text-muted ms-2">
+                <span class="text-muted">
                     {{ trans('plugins/handmade-workflow::handmade-workflow.step_of', [
                         'current' => $currentIndex + 1,
                         'total' => $totalSteps,
                     ]) }}
                 </span>
+            @endif
+            @if ($isCustomOrder)
+                {!! CustomerGroupEnum::of($customerGroup)->toHtml() !!}
             @endif
         </div>
 
@@ -51,6 +54,30 @@
                 {{ trans('plugins/handmade-workflow::handmade-workflow.updated_at') }}:
                 {{ \Illuminate\Support\Carbon::parse($order->production_status_updated_at)->format('d/m/Y H:i') }}
             </p>
+        @endif
+
+        {{-- Payment milestones live here too, so the sidebar stays one card. --}}
+        @if ($quote?->isQuoted())
+            <div class="border rounded p-2 mb-3 small">
+                @foreach ([
+                    ['deposit', $quote->deposit_amount, $quote->isDepositPaid()],
+                    ['final', $quote->final_amount, $quote->isFinalPaid()],
+                ] as [$key, $amount, $paid])
+                    <div @class(['d-flex justify-content-between align-items-center', 'mb-1' => ! $loop->last])>
+                        <span class="text-muted">
+                            {{ trans("plugins/handmade-workflow::handmade-workflow.quote.$key") }}
+                        </span>
+                        <span>
+                            <strong>{{ format_price($amount) }}</strong>
+                            <span class="badge bg-{{ $paid ? 'success' : 'warning' }}">
+                                {{ $paid
+                                    ? trans('plugins/handmade-workflow::handmade-workflow.quote.paid')
+                                    : trans('plugins/handmade-workflow::handmade-workflow.quote.unpaid') }}
+                            </span>
+                        </span>
+                    </div>
+                @endforeach
+            </div>
         @endif
 
         {{-- What to do right now --}}

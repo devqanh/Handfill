@@ -9,10 +9,32 @@
             {{ trans('plugins/handmade-workflow::handmade-workflow.quote.customer_title') }}
         </h5>
 
+        @if ($action === 'accept-quote')
+            <div class="alert alert-primary d-flex align-items-start gap-2">
+                <x-core::icon name="ti ti-file-invoice" class="flex-shrink-0 mt-1" />
+                <div>
+                    <strong class="d-block">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.sent_banner') }}</strong>
+                    <span class="small">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.sent_banner_help') }}</span>
+                </div>
+            </div>
+        @endif
+
+        {{-- Itemised exactly as staff priced it, so this page matches the admin view. --}}
         <table class="table table-sm">
             <tbody>
-                <tr>
-                    <td>{{ trans('plugins/handmade-workflow::handmade-workflow.quote.product_cost') }}</td>
+                @foreach ($order->products as $product)
+                    <tr>
+                        <td>
+                            {{ $product->product_name }}
+                            <span class="text-muted d-block small">
+                                {{ format_price($product->price) }} × {{ $product->qty }}
+                            </span>
+                        </td>
+                        <td class="text-end align-middle">{{ format_price($product->price * $product->qty) }}</td>
+                    </tr>
+                @endforeach
+                <tr class="border-top">
+                    <td class="text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.product_cost') }}</td>
                     <td class="text-end">{{ format_price($quote->product_cost) }}</td>
                 </tr>
                 @if ($quote->shipping_cost > 0)
