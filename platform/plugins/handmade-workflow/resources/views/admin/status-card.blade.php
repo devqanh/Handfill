@@ -25,7 +25,7 @@
     $canCancel = in_array(ProductionStatusEnum::CANCELED, $allowed, true);
 @endphp
 
-<x-core::card class="mt-3">
+<x-core::card class="mt-3" id="hw-status-card">
     <x-core::card.header>
         <x-core::card.title>
             <x-core::icon name="ti ti-progress-check" />
@@ -206,3 +206,36 @@
         @endif
     </x-core::card.body>
 </x-core::card>
+
+{{--
+    The order page has no hook inside the wide column, and copying its 730-line
+    view just to move two boxes would freeze core refund/shipment logic with it.
+    So the two cards are swapped in the DOM instead: production status goes under
+    the order information (wide column), order history moves to the sidebar.
+    Runs synchronously — both targets already exist at this point — so there is
+    no visible jump.
+--}}
+<script>
+    (function () {
+        const statusCard = document.getElementById('hw-status-card')
+        const wide = document.querySelector('.row-cards > .col-md-9')
+        const side = document.querySelector('.row-cards > .col-md-3')
+
+        if (statusCard && wide) {
+            const orderCard = wide.querySelector(':scope > .card')
+
+            if (orderCard) {
+                orderCard.insertAdjacentElement('afterend', statusCard)
+            } else {
+                wide.appendChild(statusCard)
+            }
+        }
+
+        const historyCard = document.getElementById('order-history-wrapper')?.closest('.card')
+
+        if (historyCard && side) {
+            historyCard.classList.add('mt-3')
+            side.appendChild(historyCard)
+        }
+    })()
+</script>
