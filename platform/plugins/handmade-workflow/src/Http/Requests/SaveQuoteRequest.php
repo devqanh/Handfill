@@ -16,6 +16,7 @@ class SaveQuoteRequest extends Request
             'shipping_cost' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'fulfill_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],
             'packing_fee' => ['required', 'numeric', 'min:0', 'max:99999999999'],
+            'deposit_percent' => ['required', 'integer', 'min:0', 'max:100'],
             'expected_delivery_date' => ['nullable', 'date'],
             'note' => ['nullable', 'string', 'max:1000'],
         ];

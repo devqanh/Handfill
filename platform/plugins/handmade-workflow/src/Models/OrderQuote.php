@@ -17,6 +17,7 @@ class OrderQuote extends BaseModel
         'shipping_cost',
         'fulfill_fee',
         'packing_fee',
+        'deposit_percent',
         'expected_delivery_date',
         'note',
         'quoted_by',
@@ -31,6 +32,7 @@ class OrderQuote extends BaseModel
         'shipping_cost' => 'float',
         'fulfill_fee' => 'float',
         'packing_fee' => 'float',
+        'deposit_percent' => 'integer',
         'expected_delivery_date' => 'date',
         'quoted_at' => 'datetime',
         'accepted_at' => 'datetime',
@@ -57,7 +59,7 @@ class OrderQuote extends BaseModel
      */
     protected function depositAmount(): Attribute
     {
-        return Attribute::get(fn (): float => round($this->product_cost / 2, 2) + $this->shipping_cost);
+        return Attribute::get(fn (): float => round($this->product_cost * $this->depositRate(), 2) + $this->shipping_cost);
     }
 
     /**
@@ -68,6 +70,12 @@ class OrderQuote extends BaseModel
     protected function finalAmount(): Attribute
     {
         return Attribute::get(fn (): float => round($this->total - $this->deposit_amount, 2));
+    }
+
+    /** Share of the product cost taken as deposit; 50% unless the quote says otherwise. */
+    public function depositRate(): float
+    {
+        return ($this->deposit_percent ?: 50) / 100;
     }
 
     public function isQuoted(): bool

@@ -111,6 +111,7 @@ class QuoteService
             'shipping_cost' => (float) $data['shipping_cost'],
             'fulfill_fee' => (float) $data['fulfill_fee'],
             'packing_fee' => (float) $data['packing_fee'],
+            'deposit_percent' => (int) ($data['deposit_percent'] ?? 50),
             'expected_delivery_date' => $data['expected_delivery_date'] ?? null,
             'note' => $data['note'] ?? null,
             'quoted_by' => Auth::id(),

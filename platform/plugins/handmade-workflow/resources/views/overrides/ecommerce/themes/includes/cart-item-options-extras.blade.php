@@ -24,9 +24,12 @@
         </p>
     @endif
 
-    @if (! empty($handmade['images']))
+    {{-- Photo 1 is already drawn as the line thumbnail, so the gallery starts at 2. --}}
+    @php $extraImages = array_slice($handmade['images'] ?? [], 1); @endphp
+
+    @if ($extraImages)
         <div class="d-flex flex-wrap gap-2 mt-1">
-            @foreach ($handmade['images'] as $image)
+            @foreach ($extraImages as $image)
                 <a
                     href="{{ RvMedia::getImageUrl($image) }}"
                     class="hw-photo"
@@ -60,14 +63,38 @@
     </div>
 
     <script>
-        document.addEventListener('click', function (event) {
-            const link = event.target.closest('.hw-photo')
-            if (!link) return
+        (function () {
+            const FOLDER = '/{{ \Botble\HandmadeWorkflow\Services\CustomOrderService::MEDIA_FOLDER }}/'
 
-            event.preventDefault()
+            function open(src) {
+                document.getElementById('hw-photo-modal-image').src = src
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('hw-photo-modal')).show()
+            }
 
-            document.getElementById('hw-photo-modal-image').src = link.dataset.hwPhoto
-            bootstrap.Modal.getOrCreateInstance(document.getElementById('hw-photo-modal')).show()
-        })
+            document.addEventListener('click', function (event) {
+                const link = event.target.closest('.hw-photo')
+
+                if (link) {
+                    event.preventDefault()
+                    open(link.dataset.hwPhoto)
+                    return
+                }
+
+                // The line thumbnail is drawn by core, so it has no marker of its own —
+                // recognise it by the folder customer photos are stored in.
+                const img = event.target.closest('img')
+
+                if (img && img.src.includes(FOLDER)) {
+                    event.preventDefault()
+                    // Thumbnails are resized copies; strip the -WxH suffix for the full one.
+                    open(img.src.replace(/-\d+x\d+(\.[a-z]+)$/i, '$1'))
+                }
+            })
+
+            // Hint that core thumbnails are clickable too.
+            document.querySelectorAll('img[src*="' + FOLDER + '"]').forEach(function (img) {
+                img.style.cursor = 'zoom-in'
+            })
+        })()
     </script>
 @endonce

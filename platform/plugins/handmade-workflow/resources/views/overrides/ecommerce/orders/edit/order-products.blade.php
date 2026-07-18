@@ -10,9 +10,16 @@
     $hwWorkflow = app(\Botble\HandmadeWorkflow\Services\ProductionWorkflow::class);
     $hwQuotes = app(\Botble\HandmadeWorkflow\Services\QuoteService::class);
 
-    // Prices stay editable only until the customer accepts and the deposit is charged.
-    $hwEditable = ($isInAdmin ?? false)
-        && $hwWorkflow->currentStatus($order) === \Botble\HandmadeWorkflow\Enums\ProductionStatusEnum::PENDING_APPROVAL;
+    // Editable while pricing and while a sent quote is still awaiting the customer,
+    // so staff can re-quote after feedback. Locked once the deposit is charged.
+    $hwEditable = ($isInAdmin ?? false) && in_array(
+        $hwWorkflow->currentStatus($order),
+        [
+            \Botble\HandmadeWorkflow\Enums\ProductionStatusEnum::PENDING_APPROVAL,
+            \Botble\HandmadeWorkflow\Enums\ProductionStatusEnum::QUOTED,
+        ],
+        true
+    );
 
     $hwQuote = $hwQuotes->withDefaults($order);
 @endphp
@@ -174,14 +181,25 @@
                         <input type="number" step="1" min="0" class="form-control form-control-sm hw-fee"
                             id="hw_packing_fee" value="{{ (float) $hwQuote->packing_fee }}">
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
+                        <label class="form-label small mb-1" for="hw_deposit_percent">
+                            {{ trans('plugins/handmade-workflow::handmade-workflow.quote.deposit_percent') }}
+                        </label>
+                        <div class="input-group input-group-sm">
+                            <input type="number" step="1" min="0" max="100" class="form-control hw-fee"
+                                id="hw_deposit_percent" value="{{ (int) ($hwQuote->deposit_percent ?: 50) }}">
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
                         <label class="form-label small mb-1" for="hw_delivery_date">
                             {{ trans('plugins/handmade-workflow::handmade-workflow.quote.delivery_date') }}
                         </label>
                         <input type="date" class="form-control form-control-sm" id="hw_delivery_date"
                             value="{{ $hwQuote->expected_delivery_date?->format('Y-m-d') }}">
                     </div>
-                    <div class="col-sm-6">
+                    <div class="col-sm-4">
                         <label class="form-label small mb-1" for="hw_quote_note">
                             {{ trans('plugins/handmade-workflow::handmade-workflow.quote.note') }}
                         </label>
@@ -253,8 +271,9 @@
                     + num(document.getElementById('hw_fulfill_fee'))
                     + num(document.getElementById('hw_packing_fee'))
 
-                // Same formula as the server: deposit = half the products + shipping.
-                const deposit = Math.round((products / 2) * 100) / 100 + shipping
+                // Same formula as the server: deposit = a share of the products + shipping.
+                const percent = num(document.getElementById('hw_deposit_percent'))
+                const deposit = Math.round(products * (percent / 100) * 100) / 100 + shipping
 
                 document.getElementById('hw-sum-total').textContent = fmt(total)
                 document.getElementById('hw-sum-deposit').textContent = fmt(deposit)
@@ -275,6 +294,7 @@
                     shipping_cost: num(document.getElementById('hw_shipping_cost')),
                     fulfill_fee: num(document.getElementById('hw_fulfill_fee')),
                     packing_fee: num(document.getElementById('hw_packing_fee')),
+                    deposit_percent: num(document.getElementById('hw_deposit_percent')),
                     expected_delivery_date: document.getElementById('hw_delivery_date').value || null,
                     note: document.getElementById('hw_quote_note').value || null,
                 }

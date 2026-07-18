@@ -164,8 +164,9 @@
                             type="submit"
                             name="production_status"
                             value="{{ $status }}"
-                            class="btn btn-primary"
-                            onclick="return confirm('{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_move', ['step' => $stepLabel]) }}')"
+                            class="btn btn-primary hw-needs-confirm"
+                            data-hw-confirm="{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_move', ['step' => $stepLabel]) }}"
+                            data-hw-confirm-label="{{ trans('plugins/handmade-workflow::handmade-workflow.update_status') }}"
                         >
                             <x-core::icon name="ti ti-arrow-right" class="me-1" />
                             {{ $stepLabel }}
@@ -185,7 +186,6 @@
                     :url="route('handmade-workflow.update-status', $order->getKey())"
                     method="POST"
                     class="mb-0"
-                    onsubmit="return confirm('{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_cancel') }}')"
                 >
                     <input type="hidden" name="production_status" value="{{ ProductionStatusEnum::CANCELED }}">
 
@@ -196,7 +196,13 @@
                         placeholder="{{ trans('plugins/handmade-workflow::handmade-workflow.cancel_reason') }}"
                     >
 
-                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                    <button
+                        type="submit"
+                        class="btn btn-sm btn-outline-danger hw-needs-confirm"
+                        data-hw-confirm="{{ trans('plugins/handmade-workflow::handmade-workflow.confirm_cancel') }}"
+                        data-hw-confirm-label="{{ trans('plugins/handmade-workflow::handmade-workflow.cancel_order') }}"
+                        data-hw-confirm-danger="1"
+                    >
                         <x-core::icon name="ti ti-circle-x" class="me-1" />
                         {{ trans('plugins/handmade-workflow::handmade-workflow.cancel_order') }}
                     </button>
@@ -214,6 +220,53 @@
     Runs synchronously — both targets already exist at this point — so there is
     no visible jump.
 --}}
+{{-- Confirmation uses the admin theme's own modal; a native confirm() box looks
+     out of place next to the rest of the panel. --}}
+<x-core::modal.action
+    id="hw-confirm-modal"
+    type="info"
+    :title="trans('plugins/handmade-workflow::handmade-workflow.confirm_title')"
+    :submit-button-label="trans('plugins/handmade-workflow::handmade-workflow.update_status')"
+    :submit-button-attrs="['id' => 'hw-confirm-submit']"
+    :close-button-label="trans('core/base::tables.cancel')"
+>
+    <span id="hw-confirm-message"></span>
+</x-core::modal.action>
+
+<script>
+    (function () {
+        let pending = null
+
+        const modalEl = document.getElementById('hw-confirm-modal')
+        const submit = document.getElementById('hw-confirm-submit')
+
+        document.addEventListener('click', function (event) {
+            const button = event.target.closest('.hw-needs-confirm')
+            if (!button || button.dataset.hwConfirmed === '1') return
+
+            event.preventDefault()
+            pending = button
+
+            document.getElementById('hw-confirm-message').textContent = button.dataset.hwConfirm
+            submit.textContent = button.dataset.hwConfirmLabel
+            submit.classList.toggle('btn-danger', button.dataset.hwConfirmDanger === '1')
+            submit.classList.toggle('btn-info', button.dataset.hwConfirmDanger !== '1')
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).show()
+        })
+
+        submit.addEventListener('click', function () {
+            if (!pending) return
+
+            bootstrap.Modal.getOrCreateInstance(modalEl).hide()
+
+            // Re-click the original button so its name/value still reaches the form.
+            pending.dataset.hwConfirmed = '1'
+            pending.click()
+        })
+    })()
+</script>
+
 {{-- Cards from different plugins land in the sidebar with no shared spacing rule,
      so consecutive ones end up touching. --}}
 <style>
