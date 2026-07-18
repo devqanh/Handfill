@@ -1,0 +1,78 @@
+<?php
+
+return [
+    'name' => 'Lark Webhook',
+    'events' => 'Sự kiện',
+    'event_detail' => 'Sự kiện #:id',
+    'event_info' => 'Thông tin sự kiện',
+
+    'event_type' => 'Loại sự kiện',
+    'event_id' => 'Mã sự kiện',
+    'schema_version' => 'Phiên bản schema',
+    'status' => 'Trạng thái',
+    'ip_address' => 'Địa chỉ IP',
+    'received_at' => 'Thời điểm nhận',
+    'event_time' => 'Thời điểm sự kiện',
+    'message' => 'Ghi chú',
+    'payload' => 'Nội dung (payload)',
+    'headers' => 'Header của request',
+    'back_to_list' => 'Quay lại danh sách',
+
+    'statuses' => [
+        'received' => 'Đã nhận',
+        'verified' => 'Đã xác minh',
+        'rejected' => 'Bị từ chối',
+    ],
+
+    'webhook_url' => 'Đường dẫn Webhook',
+    'webhook_url_helper' => 'Dán đường dẫn này vào mục "Request URL" trong phần đăng ký sự kiện (event subscription) của ứng dụng Lark, hoặc vào hành động "Gửi request" trong automation của Lark Base. Lark sẽ gửi sự kiện về đây.',
+    'copy' => 'Sao chép',
+    'copied' => 'Đã sao chép đường dẫn webhook.',
+
+    'regenerate_token' => 'Tạo lại đường dẫn',
+    'regenerate_token_confirm' => 'Thao tác này sẽ tạo một đường dẫn webhook hoàn toàn mới. Đường dẫn cũ sẽ ngừng hoạt động ngay lập tức và bạn phải cập nhật lại trong Lark. Tiếp tục?',
+    'token_regenerated' => 'Đã tạo đường dẫn webhook mới. Nhớ cập nhật lại trong Lark.',
+
+    'delete_all' => 'Xóa tất cả sự kiện',
+    'empty_events' => 'Xóa tất cả sự kiện',
+    'confirm_empty_events' => 'Bạn có chắc muốn xóa toàn bộ sự kiện đã ghi nhận? Hành động này không thể hoàn tác.',
+
+    'settings' => [
+        'name' => 'Lark Webhook',
+        'description' => 'Cấu hình cách nhận và xác minh các sự kiện webhook gửi về từ Lark Base / Lark Suite.',
+
+        'inbound_heading' => 'Chiều NHẬN (Lark → website)',
+        'inbound_desc' => 'Lark gửi sự kiện tới đường dẫn webhook và website ghi nhận lại.',
+        'enabled' => 'Bật webhook',
+        'enabled_helper' => 'Khi tắt, endpoint sẽ trả về 403 và không ghi nhận sự kiện nào.',
+        'verification_token' => 'Verification Token',
+        'verification_token_helper' => 'Không bắt buộc. Nếu điền, chỉ những request mang đúng Verification Token (lấy từ phần event subscription của ứng dụng Lark) mới được chấp nhận.',
+        'encrypt_key' => 'Encrypt Key',
+        'encrypt_key_helper' => 'Không bắt buộc. Nếu bạn bật "Encrypt Key" trong Lark, hãy dán vào đây để giải mã payload đã mã hóa (AES-256-CBC).',
+
+        'outbound_heading' => 'Chiều GỬI record (website → Lark Base)',
+        'outbound_desc' => 'Bắn record (kèm ảnh) từ website lên một bảng trong Lark Base. Yêu cầu phía Lark: (1) app có scope <b>bitable:app</b> (đọc+ghi) và <b>drive:drive</b> (để upload ảnh); (2) thêm app làm cộng tác viên của Base với quyền <b>Có thể chỉnh sửa</b> (không phải chỉ đọc); (3) sau khi đổi scope phải phát hành lại phiên bản app.',
+        'push_enabled' => 'Bật gửi record lên Lark Base',
+        'push_enabled_helper' => 'Công tắc tổng cho việc bắn record lên Lark Base.',
+        'base_domain' => 'Vùng máy chủ',
+        'app_id' => 'App ID',
+        'app_id_helper' => 'App ID của custom app trong Lark (Developer Console).',
+        'app_secret' => 'App Secret',
+        'app_secret_helper' => 'App Secret của custom app. Được lưu an toàn; để nguyên nếu không muốn đổi.',
+        'base_app_token' => 'Base App Token',
+        'base_app_token_helper' => 'Token của Base trên URL — chuỗi sau /base/ hoặc /wiki/. Nếu Base nằm trong Wiki, hệ thống tự resolve ra obj_token thật khi upload ảnh, cứ nhập token trên URL là được.',
+        'base_table_id' => 'Table ID',
+        'base_table_id_helper' => 'table_id của bảng đích — giá trị tbl... trong URL của Base.',
+        'test_push' => 'Kiểm tra kết nối',
+        'test_push_helper' => 'Kiểm tra xác thực, đọc, ghi và upload ảnh. Nhớ Lưu cấu hình trước.',
+        'test_push_success' => 'Kết nối Lark Base OK — đầy đủ quyền đọc, ghi và upload ảnh.',
+        'check_config' => 'Cấu hình đầy đủ',
+        'check_auth' => 'Xác thực App ID / App Secret',
+        'check_read' => 'Đọc bảng',
+        'check_write' => 'Ghi record',
+        'check_upload' => 'Upload ảnh',
+        'hint_read' => 'App chưa đọc được Base. Kiểm tra App Token/Table ID đúng và app đã được thêm làm cộng tác viên của Base.',
+        'hint_write' => 'App chưa có quyền GHI (mã 91403). Mở Base → Chia sẻ, thêm app (bot) với quyền "Có thể chỉnh sửa"; và bật scope bitable:app (không phải readonly), rồi phát hành lại app.',
+        'hint_upload' => 'App chưa upload được ảnh lên Drive (mã 1061004). Thêm scope drive:drive (quyền upload/quản lý file) cho app và phát hành lại phiên bản.',
+    ],
+];

@@ -1,0 +1,33 @@
+/* E-Wallet Admin RTL Styles */
+
+@import 'wallet-admin';
+
+// RTL-specific overrides
+[dir="rtl"] {
+    .wallet-page {
+        // Flip text alignment
+        .text-end {
+            text-align: left !important;
+        }
+
+        .text-start {
+            text-align: right !important;
+        }
+
+        // Flip margin utilities
+        .ms-auto {
+            margin-right: auto !important;
+            margin-left: 0 !important;
+        }
+
+        .me-auto {
+            margin-left: auto !important;
+            margin-right: 0 !important;
+        }
+
+        // Flip icons in buttons
+        .btn .ti-arrow-left {
+            transform: scaleX(-1);
+        }
+    }
+}

@@ -1,0 +1,137 @@
+/* E-Wallet Admin Styles - Dark Mode Support */
+
+// CSS Custom Properties for Wallet Admin Theming
+:root {
+    // Card backgrounds
+    --wallet-card-bg: #ffffff;
+    --wallet-card-header-bg: #ffffff;
+    --wallet-card-border: rgba(0, 0, 0, 0.125);
+    --wallet-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+
+    // Table backgrounds
+    --wallet-table-header-bg: #f8f9fa;
+    --wallet-table-hover-bg: rgba(0, 0, 0, 0.02);
+    --wallet-table-border: #dee2e6;
+
+    // Text colors
+    --wallet-text-primary: #212529;
+    --wallet-text-secondary: #6c757d;
+    --wallet-text-muted: #adb5bd;
+
+    // Transaction type backgrounds (light variants)
+    --wallet-activity-credit-bg: rgba(40, 167, 69, 0.1);
+    --wallet-activity-debit-bg: rgba(220, 53, 69, 0.1);
+    --wallet-activity-refund-bg: rgba(13, 110, 253, 0.1);
+    --wallet-activity-topup-bg: rgba(32, 201, 151, 0.1);
+
+    // Empty state
+    --wallet-empty-bg: #f8f9fa;
+}
+
+// Dark mode overrides
+[data-bs-theme='dark'] {
+    --wallet-card-bg: var(--tblr-bg-surface, #1a1d21);
+    --wallet-card-header-bg: var(--tblr-bg-surface-secondary, #22262a);
+    --wallet-card-border: rgba(255, 255, 255, 0.1);
+    --wallet-card-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
+
+    --wallet-table-header-bg: var(--tblr-bg-surface-secondary, #22262a);
+    --wallet-table-hover-bg: rgba(255, 255, 255, 0.03);
+    --wallet-table-border: rgba(255, 255, 255, 0.1);
+
+    --wallet-text-primary: #e1e4e8;
+    --wallet-text-secondary: #8b949e;
+    --wallet-text-muted: #6c757d;
+
+    --wallet-activity-credit-bg: rgba(40, 167, 69, 0.15);
+    --wallet-activity-debit-bg: rgba(220, 53, 69, 0.15);
+    --wallet-activity-refund-bg: rgba(13, 110, 253, 0.15);
+    --wallet-activity-topup-bg: rgba(32, 201, 151, 0.15);
+
+    --wallet-empty-bg: var(--tblr-bg-surface-secondary, #22262a);
+}
+
+// Scoped styles for wallet pages
+.wallet-page {
+    // Card styling
+    .card {
+        background-color: var(--wallet-card-bg);
+        border-color: var(--wallet-card-border);
+        box-shadow: var(--wallet-card-shadow);
+        transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .card-header {
+        background-color: var(--wallet-card-header-bg) !important;
+        border-bottom-color: var(--wallet-card-border);
+    }
+
+    .card-body {
+        background-color: var(--wallet-card-bg);
+    }
+
+    // Table styling
+    .table {
+        --bs-table-bg: var(--wallet-card-bg);
+        --bs-table-hover-bg: var(--wallet-table-hover-bg);
+
+        thead {
+            th {
+                background-color: var(--wallet-table-header-bg) !important;
+                border-color: var(--wallet-table-border) !important;
+                color: var(--wallet-text-secondary);
+            }
+        }
+
+        tbody {
+            td {
+                border-color: var(--wallet-table-border);
+                color: var(--wallet-text-primary);
+            }
+
+            tr:hover {
+                background-color: var(--wallet-table-hover-bg);
+            }
+        }
+    }
+
+    // Remove table-light class override in dark mode
+    .table-light {
+        --bs-table-bg: var(--wallet-table-header-bg);
+        --bs-table-border-color: var(--wallet-table-border);
+        --bs-table-color: var(--wallet-text-secondary);
+    }
+
+    // Text utilities respect theme
+    .text-muted {
+        color: var(--wallet-text-secondary) !important;
+    }
+
+    // Empty state styling
+    .empty-state {
+        background-color: var(--wallet-empty-bg);
+        border-radius: 0.5rem;
+        padding: 2rem;
+        text-align: center;
+
+        .icon-xxl {
+            color: var(--wallet-text-muted);
+        }
+
+        p {
+            color: var(--wallet-text-secondary);
+        }
+    }
+
+    // Smooth transitions for theme switching
+    * {
+        transition: background-color 0.2s ease,
+                    border-color 0.2s ease,
+                    color 0.2s ease;
+    }
+}
+
+// Dashboard widget stat number sizing
+.dashboard-widget-item .details .number {
+    font-size: 35px;
+}

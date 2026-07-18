@@ -1,0 +1,11 @@
+{
+    "id": "botble/lark-webhook",
+    "name": "Lark Webhook",
+    "namespace": "Botble\\LarkWebhook\\",
+    "provider": "Botble\\LarkWebhook\\Providers\\LarkWebhookServiceProvider",
+    "author": "TopID",
+    "url": "https://topid.vn",
+    "version": "1.0.0",
+    "description": "Nhận sự kiện (event) từ Lark Suite Base gửi về qua webhook, ghi nhận lịch sử và xem lại danh sách sự kiện.",
+    "minimum_core_version": "7.4.0"
+}

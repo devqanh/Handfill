@@ -1,0 +1,12 @@
+{
+    "id": "botble/handmade-workflow",
+    "name": "Handmade Workflow",
+    "namespace": "Botble\\HandmadeWorkflow\\",
+    "provider": "Botble\\HandmadeWorkflow\\Providers\\HandmadeWorkflowServiceProvider",
+    "author": "TopID",
+    "url": "https://topid.vn",
+    "version": "1.0.0",
+    "description": "Quy trình sản xuất đơn hàng handmade: 10 trạng thái sản xuất, máy trạng thái, lịch sử và đồng bộ Lark.",
+    "minimum_core_version": "7.4.0",
+    "require": ["botble/ecommerce"]
+}

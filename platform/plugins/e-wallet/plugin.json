@@ -1,0 +1,13 @@
+{
+    "id": "botble/e-wallet",
+    "name": "E-Wallet",
+    "namespace": "Botble\\EWallet\\",
+    "provider": "Botble\\EWallet\\Providers\\EWalletServiceProvider",
+    "author": "Botble Technologies",
+    "version": "1.0.5",
+    "description": "Customer wallet system with checkout payments and refund credits",
+    "minimum_core_version": "7.5.0",
+    "require": [
+        "botble/ecommerce"
+    ]
+}

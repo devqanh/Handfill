@@ -1,0 +1,78 @@
+<?php
+
+return [
+    'name' => 'Lark Webhook',
+    'events' => 'Events',
+    'event_detail' => 'Event #:id',
+    'event_info' => 'Event information',
+
+    'event_type' => 'Event type',
+    'event_id' => 'Event ID',
+    'schema_version' => 'Schema version',
+    'status' => 'Status',
+    'ip_address' => 'IP address',
+    'received_at' => 'Received at',
+    'event_time' => 'Event time',
+    'message' => 'Message',
+    'payload' => 'Payload',
+    'headers' => 'Request headers',
+    'back_to_list' => 'Back to list',
+
+    'statuses' => [
+        'received' => 'Received',
+        'verified' => 'Verified',
+        'rejected' => 'Rejected',
+    ],
+
+    'webhook_url' => 'Webhook URL',
+    'webhook_url_helper' => 'Paste this URL into the "Request URL" of your Lark app event subscription (or a Lark Base automation "Send request" action). Lark will send events here.',
+    'copy' => 'Copy',
+    'copied' => 'Webhook URL copied to clipboard.',
+
+    'regenerate_token' => 'Regenerate URL',
+    'regenerate_token_confirm' => 'This will generate a brand new webhook URL. The old URL will stop working immediately and you must update it in Lark. Continue?',
+    'token_regenerated' => 'A new webhook URL has been generated. Remember to update it in Lark.',
+
+    'delete_all' => 'Delete all events',
+    'empty_events' => 'Delete all events',
+    'confirm_empty_events' => 'Do you really want to delete all recorded events? This cannot be undone.',
+
+    'settings' => [
+        'name' => 'Lark Webhook',
+        'description' => 'Configure how incoming Lark Base / Lark Suite webhook events are received and verified.',
+
+        'inbound_heading' => 'Receiving (Lark → this site)',
+        'inbound_desc' => 'Lark sends events to your webhook URL and this site records them.',
+        'enabled' => 'Enable webhook',
+        'enabled_helper' => 'When turned off, the endpoint returns 403 and no events are recorded.',
+        'verification_token' => 'Verification Token',
+        'verification_token_helper' => 'Optional. If set, only requests carrying this Verification Token (from your Lark app event subscription) are accepted.',
+        'encrypt_key' => 'Encrypt Key',
+        'encrypt_key_helper' => 'Optional. If you enabled "Encrypt Key" in Lark, paste it here so the encrypted payloads can be decoded (AES-256-CBC).',
+
+        'outbound_heading' => 'Sending records (this site → Lark Base)',
+        'outbound_desc' => 'Push records (with images) from this site into a Lark Base table. On the Lark side: (1) the app needs the <b>bitable:app</b> scope (read+write) and <b>drive:drive</b> (to upload images); (2) add the app as a Base collaborator with <b>Can edit</b> permission (not read-only); (3) re-release the app version after changing scopes.',
+        'push_enabled' => 'Enable sending to Lark Base',
+        'push_enabled_helper' => 'Master switch for pushing records to Lark Base.',
+        'base_domain' => 'Server region',
+        'app_id' => 'App ID',
+        'app_id_helper' => 'The App ID of your Lark custom app (Developer Console).',
+        'app_secret' => 'App Secret',
+        'app_secret_helper' => 'The App Secret of your Lark custom app. Stored securely; leave as-is to keep the current value.',
+        'base_app_token' => 'Base App Token',
+        'base_app_token_helper' => 'The token in the Base URL — the string after /base/ or /wiki/. If the Base lives in a Wiki, the real obj_token is resolved automatically for image uploads, so the URL token is fine.',
+        'base_table_id' => 'Table ID',
+        'base_table_id_helper' => 'The table_id of the target table — the tbl... value in the Base URL.',
+        'test_push' => 'Test connection',
+        'test_push_helper' => 'Checks auth, read, write and image upload. Save your settings first.',
+        'test_push_success' => 'Lark Base connection OK — read, write and image upload all work.',
+        'check_config' => 'Configuration complete',
+        'check_auth' => 'Authenticate App ID / App Secret',
+        'check_read' => 'Read table',
+        'check_write' => 'Create records',
+        'check_upload' => 'Upload images',
+        'hint_read' => 'The app cannot read the Base. Check the App Token / Table ID and that the app is a collaborator on the Base.',
+        'hint_write' => 'The app has no WRITE permission (code 91403). Open the Base → Share, add the app (bot) with "Can edit"; and enable the bitable:app scope (not readonly), then re-release the app.',
+        'hint_upload' => 'The app cannot upload images to Drive (code 1061004). Add the drive:drive scope (upload/manage files) to the app and re-release the app version.',
+    ],
+];
