@@ -345,12 +345,14 @@ Trước: một chồng thẻ trắng giống hệt nhau, mỗi sản phẩm là
 ### Đã kiểm chứng (chạy thật qua HTTP, có đăng nhập)
 - Đọc đúng **cả 3 dòng** file thật của khách: tên, SL, SKU, Order ID, ghi chú nhiều dòng,
   người nhận + email từng dòng.
-- **Tải được cả 5 ảnh**: 4 ảnh từ S3/zaytoka + ảnh màu vải từ **prnt.sc** (trang chia sẻ trả
-  về HTML, đã lần theo thẻ `og:image` để lấy ảnh gốc). 0 cảnh báo.
-- Gửi đơn thật → đơn `#SF-10000013` (3 dòng), mỗi dòng giữ đúng người nhận riêng;
-  `ec_order_addresses` tự lấy người nhận dòng đầu vì khách không chọn địa chỉ chung.
-- Trang đơn của khách hiện đủ: SKU, Order ID, ngày order, ảnh SP, ảnh màu vải, người nhận,
-  email, địa chỉ.
+- **Phân loại đúng cả 5 link**: 3 link ảnh S3/zaytoka → `image`; 2 link prnt.sc → `page`
+  (mở được nhưng là trang web) → cho qua kèm nhãn vàng. 0 cảnh báo. Đọc file dưới 1 giây.
+- **Chặn đúng link hỏng** — mỗi ca ~0,6s: link 404, host không tồn tại, và `http://127.0.0.1`
+  (thử SSRF) đều bị từ chối HTTP 422 kèm thông báo chỉ rõ dòng nào; link ảnh thật vẫn qua.
+- Gửi đơn thật → đơn 3 dòng, mỗi dòng giữ đúng người nhận riêng; `ec_order_addresses` tự lấy
+  người nhận dòng đầu vì khách không chọn địa chỉ chung.
+- Trang đơn của khách hiện đủ: SKU, Order ID, ngày order, ảnh từ link remote, ảnh màu vải,
+  người nhận, email, địa chỉ. Thumbnail dòng hàng lấy thẳng link S3.
 - File mẫu .xlsx sinh ra **mở lại và import ngược được** (round-trip), gồm cả comment cột
   và ràng buộc số lượng.
 - Đối chiếu asset với `customer/orders` bằng `comm -23`: **không thiếu file CSS/JS nào**,
@@ -369,9 +371,9 @@ Trước: một chồng thẻ trắng giống hệt nhau, mỗi sản phẩm là
 11. **`mimes:xlsx` loại nhầm file thật** — trình duyệt khai .xlsx là `application/octet-stream`,
     .csv là `text/plain`. Dùng `extensions:` thay cho `mimes:`. `.xls` nhị phân cũ **không đọc
     được** (openspout không hỗ trợ) nên không nhận.
-12. **Tải ảnh chậm hơn tưởng**: ~3,6s/ảnh → 50 dòng có thể vượt timeout. Đã đặt hạn mức 90s
-    cho toàn bộ lượt tải; quá hạn thì ảnh còn lại giữ nguyên dạng link kèm cảnh báo, thay vì
-    để cả lượt import chết.
+12. **Tải ảnh chậm hơn tưởng**: ~3,6s/ảnh → 50 dòng vượt timeout. Vá bằng hạn mức thời gian
+    chỉ là giấu triệu chứng; cuối cùng bỏ hẳn việc tải về (đảo quyết định #14). Bài học: đo
+    thời gian thật trước khi chọn kiến trúc — 18s cho 3 dòng đã đủ để thấy 50 dòng là hỏng.
 13. **`@json(...)` cuối dòng trong `<script>` nuốt luôn ký tự xuống dòng** → `const A = "x"const
     B = ...` và **cả file JS chết** với `Uncaught SyntaxError: Unexpected token 'const'`. Trang
     vẫn render bình thường nên chỉ lộ ra khi mở console. Bắt buộc **kết thúc bằng dấu `;`** ở
@@ -380,8 +382,45 @@ Trước: một chồng thẻ trắng giống hệt nhau, mỗi sản phẩm là
     Nghiệm thu JS từ nay: trích khối `<script>` trong HTML đã render rồi chạy `node --check`.
 
 ### Còn nợ
-- Ảnh tải về ở bước xem trước mà khách **không gửi đơn** thì nằm lại trong media library.
+- **Link có thể chết sau khi đơn đã đặt.** Kiểm lúc gửi chỉ đảm bảo link sống *lúc đó*. Nếu
+  cần chắc chắn: thêm việc chạy nền kiểm lại link của các đơn chưa giao và cảnh báo, hoặc lưu
+  bản sao sau khi tạo đơn.
 - Chưa đẩy các trường mới (SKU / Order ID / người nhận) sang Lark Base — làm cùng giai đoạn 4.
+
+## 13. Hiển thị tiền đã trả / còn nợ — ✅ ĐÃ XONG (21/07/2026)
+
+Thẻ báo giá cũ in "Tiền cọc: X — Còn lại: Y" **y hệt nhau dù đã trả hay chưa**. Khách trả cọc
+xong vào xem vẫn thấy đúng hai con số đó, không biết mình đã trả bao nhiêu.
+
+### Đã làm
+- `OrderQuote` thêm `paid_amount`, `outstanding_amount` và `milestones()` — **một nguồn tính
+  duy nhất** cho cả trang chi tiết lẫn danh sách, nên hai trang không thể lệch nhau.
+  `outstanding = total − paid` (tính ngược từ tổng, cùng lý do với công thức 2 mốc ở GĐ3).
+- **Trang chi tiết đơn**: bảng "Tình hình thanh toán" — từng mốc kèm dấu tick, thời điểm trừ
+  ví, nhãn "Đã thu"/"Chưa thu"; dưới cùng là **Đã thanh toán** và **Còn phải trả**. Trả đủ thì
+  hiện dòng xác nhận.
+- **Trang danh sách đơn**: ô "Thanh toán" (vốn luôn hiện "N/A" vì đơn handmade trừ ví theo mốc
+  chứ không qua cổng thanh toán) thay bằng **Đã thanh toán** + **Còn phải trả**, kèm dòng
+  "Đợt tiếp theo: … — …". Đơn chưa báo giá thì ghi "Chờ báo giá".
+  Quote của cả trang lấy bằng **1 truy vấn** (`whereIn` rồi `keyBy`), không phải mỗi thẻ một lần.
+- **Ẩn thẻ "Chứng từ thanh toán" khi đã thu đủ tiền.** Đòi khách chứng minh một khoản hệ thống
+  đã ghi nhận xong là vô nghĩa — với ví điện tử thì tiền vào ngay lúc bấm.
+  `QuoteService::isPaymentSettled()`: đơn có báo giá thì hỏi báo giá, còn lại hỏi bản ghi payment.
+
+### Đã kiểm chứng (chạy thật)
+- Công thức trên **cả 4 báo giá** đang có: cọc + còn lại luôn **đúng bằng tổng**; đơn đã trả đủ
+  ra `còn phải trả = 0`.
+- Thẻ chứng từ, kiểm qua HTTP cả hai chiều trên cùng một đơn: **còn nợ → hiện**, gán trả đủ →
+  **biến mất** và hiện dòng "Bạn đã thanh toán đủ đơn hàng này".
+
+### Bẫy đã gặp
+14. **`isPaymentProofEnabled()` không nhìn vào việc đã trả hay chưa** — nó chỉ hỏi "phương thức
+    này có bật chứng từ không". Ví điện tử nằm trong danh sách bật, nên đơn trả bằng ví xong
+    vẫn bị đòi chứng từ. Core không có filter ở chỗ này và method nằm sẵn trên model nên
+    macro cũng không đè được → phải **copy view** `customers/orders/view.blade.php` vào
+    `overrides/`, sửa đúng một dòng điều kiện. ⚠️ Ecommerce cập nhật view này thì phải đồng bộ lại.
+    (Đơn handmade không dính lỗi này vì chúng **không có bản ghi payment** — chỉ đơn mua hàng
+    có sẵn trả bằng ví mới lộ ra.)
 
 ### Giai đoạn 4 sẽ làm
 Đồng bộ Lark 2 chiều: đẩy đơn + ảnh lên Base khi tạo/đổi trạng thái (đã có sẵn client), thêm

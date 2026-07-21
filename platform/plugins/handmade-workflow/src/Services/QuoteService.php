@@ -6,6 +6,7 @@ use Botble\Ecommerce\Models\Order;
 use Botble\Ecommerce\Models\OrderHistory;
 use Botble\HandmadeWorkflow\Enums\CustomerGroupEnum;
 use Botble\HandmadeWorkflow\Models\OrderQuote;
+use Botble\Payment\Enums\PaymentStatusEnum;
 use Illuminate\Support\Facades\Auth;
 
 class QuoteService
@@ -15,6 +16,26 @@ class QuoteService
     public function quoteFor(Order $order): OrderQuote
     {
         return OrderQuote::query()->firstOrNew(['order_id' => $order->getKey()]);
+    }
+
+    /**
+     * Is there nothing left to collect on this order?
+     *
+     * A handmade order answers from its quote — the two wallet milestones are the
+     * only money involved. Anything else answers from its payment record.
+     *
+     * Static because the overridden order view calls it inline; the alternative was
+     * copying the payment-proof logic into Blade.
+     */
+    public static function isPaymentSettled(Order $order): bool
+    {
+        $quote = OrderQuote::query()->where('order_id', $order->getKey())->first();
+
+        if ($quote?->isQuoted()) {
+            return $quote->outstanding_amount <= 0;
+        }
+
+        return $order->payment?->status?->getValue() === PaymentStatusEnum::COMPLETED;
     }
 
     public function customerGroup(Order $order): string

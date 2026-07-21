@@ -76,17 +76,60 @@
             <div class="alert alert-light">{{ $quote->note }}</div>
         @endif
 
-        <div class="alert alert-info">
-            <div>
-                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.deposit') }}:
-                <strong>{{ format_price($quote->deposit_amount) }}</strong>
-                <small class="d-block text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.deposit_help') }}</small>
+        {{-- The two milestones with what has actually been taken. Before this the card
+             showed the same two figures whether or not they had been paid, so a
+             customer who had already paid the deposit could not tell from the page. --}}
+        <div class="border rounded p-3 mb-3">
+            <h6 class="small text-uppercase text-muted mb-3">
+                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.payment_schedule') }}
+            </h6>
+
+            @foreach ($quote->milestones() as $milestone)
+                <div class="d-flex justify-content-between align-items-start gap-3 pb-3 @if (! $loop->first) pt-3 border-top @endif">
+                    <div>
+                        <x-core::icon
+                            :name="$milestone['paid'] ? 'ti ti-circle-check-filled' : 'ti ti-circle-dashed'"
+                            :class="($milestone['paid'] ? 'text-success' : 'text-muted') . ' me-1'"
+                        />
+                        {{ trans('plugins/handmade-workflow::handmade-workflow.quote.' . $milestone['key']) }}
+                        <small class="d-block text-muted mt-1">
+                            @if ($milestone['paid'])
+                                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.paid_at', [
+                                    'time' => $milestone['paid_at']?->translatedFormat('H:i d/m/Y'),
+                                ]) }}
+                            @else
+                                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.' . $milestone['key'] . '_help') }}
+                            @endif
+                        </small>
+                    </div>
+                    <div class="text-end text-nowrap">
+                        <strong class="d-block">{{ format_price($milestone['amount']) }}</strong>
+                        <span class="badge rounded-pill bg-{{ $milestone['paid'] ? 'success' : 'secondary' }}-subtle text-{{ $milestone['paid'] ? 'success' : 'secondary' }}">
+                            {{ trans('plugins/handmade-workflow::handmade-workflow.quote.' . ($milestone['paid'] ? 'paid' : 'unpaid')) }}
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+
+            <div class="border-top pt-3">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.amount_paid') }}</span>
+                    <strong class="text-success">{{ format_price($quote->paid_amount) }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mt-1">
+                    <span class="text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.amount_outstanding') }}</span>
+                    <strong @class(['text-primary' => $quote->outstanding_amount > 0])>
+                        {{ format_price($quote->outstanding_amount) }}
+                    </strong>
+                </div>
             </div>
-            <div class="mt-2">
-                {{ trans('plugins/handmade-workflow::handmade-workflow.quote.final') }}:
-                <strong>{{ format_price($quote->final_amount) }}</strong>
-                <small class="d-block text-muted">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.final_help') }}</small>
-            </div>
+
+            @if ($quote->outstanding_amount <= 0)
+                <p class="text-success small mb-0 mt-3">
+                    <x-core::icon name="ti ti-circle-check" class="me-1" />
+                    {{ trans('plugins/handmade-workflow::handmade-workflow.quote.settled') }}
+                </p>
+            @endif
         </div>
 
         @if ($action)

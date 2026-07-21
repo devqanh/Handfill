@@ -15,6 +15,14 @@
 
     <div class="bb-customer-content-wrapper">
         @if($orders->isNotEmpty())
+            @php
+                // One query for the whole page rather than one per card.
+                $hwQuotes = \Botble\HandmadeWorkflow\Models\OrderQuote::query()
+                    ->whereIn('order_id', $orders->pluck('id'))
+                    ->get()
+                    ->keyBy('order_id');
+            @endphp
+
             <div class="customer-list-order">
                 <div class="bb-customer-card-list order-cards">
                 @foreach ($orders as $order)
@@ -55,32 +63,70 @@
 
                         <div class="bb-customer-card-body">
                             <div class="bb-customer-card-info">
+                                @php $hwQuote = $hwQuotes->get($order->getKey()); @endphp
+
                                 <div class="row g-3">
-                                    <div class="col-6 col-sm-4">
+                                    <div class="col-6 col-sm-3">
                                         <div class="info-item">
                                             <span class="label">{{ trans('plugins/ecommerce::customer-dashboard.total_amount') }}</span>
                                             <span class="value">{{ $order->amount_format }}</span>
                                         </div>
                                     </div>
-                                    <div class="col-6 col-sm-4">
+                                    <div class="col-6 col-sm-3">
                                         <div class="info-item">
                                             <span class="label">{{ trans('plugins/ecommerce::customer-dashboard.items') }}</span>
                                             <span class="value">{{ $order->products_count }}</span>
                                         </div>
                                     </div>
-                                    <div class="col-12 col-sm-4">
-                                        <div class="info-item">
-                                            <span class="label">{{ trans('plugins/ecommerce::customer-dashboard.payment') }}</span>
-                                            <span class="value">
-                                                @if(is_plugin_active('payment') && $order->payment->id && $order->payment->payment_channel->displayName())
-                                                    {{ $order->payment->payment_channel->displayName() }}
-                                                @else
-                                                    {{ trans('plugins/ecommerce::customer-dashboard.n_a') }}
-                                                @endif
-                                            </span>
+
+                                    {{-- A handmade order is paid in two wallet milestones, not through a
+                                         payment channel, so the channel cell would always read "N/A".
+                                         Show what has actually been taken and what is left instead. --}}
+                                    @if ($hwQuote?->isQuoted())
+                                        <div class="col-6 col-sm-3">
+                                            <div class="info-item">
+                                                <span class="label">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.amount_paid') }}</span>
+                                                <span class="value text-success">{{ format_price($hwQuote->paid_amount) }}</span>
+                                            </div>
                                         </div>
-                                    </div>
+                                        <div class="col-6 col-sm-3">
+                                            <div class="info-item">
+                                                <span class="label">{{ trans('plugins/handmade-workflow::handmade-workflow.quote.amount_outstanding') }}</span>
+                                                <span @class(['value', 'text-primary' => $hwQuote->outstanding_amount > 0])>
+                                                    {{ format_price($hwQuote->outstanding_amount) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="col-12 col-sm-6">
+                                            <div class="info-item">
+                                                <span class="label">{{ trans('plugins/ecommerce::customer-dashboard.payment') }}</span>
+                                                <span class="value">
+                                                    @if ($isCustomOrder)
+                                                        {{ trans('plugins/handmade-workflow::handmade-workflow.quote.awaiting_quote') }}
+                                                    @elseif(is_plugin_active('payment') && $order->payment->id && $order->payment->payment_channel->displayName())
+                                                        {{ $order->payment->payment_channel->displayName() }}
+                                                    @else
+                                                        {{ trans('plugins/ecommerce::customer-dashboard.n_a') }}
+                                                    @endif
+                                                </span>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
+
+                                @if ($hwQuote?->isQuoted() && $hwQuote->outstanding_amount > 0)
+                                    <p class="text-muted small mb-0 mt-3">
+                                        <x-core::icon name="ti ti-info-circle" class="me-1" />
+                                        {{ trans('plugins/handmade-workflow::handmade-workflow.quote.next_payment', [
+                                            'amount' => format_price(
+                                                $hwQuote->isDepositPaid() ? $hwQuote->final_amount : $hwQuote->deposit_amount
+                                            ),
+                                            'milestone' => trans('plugins/handmade-workflow::handmade-workflow.quote.'
+                                                . ($hwQuote->isDepositPaid() ? 'final' : 'deposit')),
+                                        ]) }}
+                                    </p>
+                                @endif
                             </div>
                         </div>
 

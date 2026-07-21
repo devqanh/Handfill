@@ -78,6 +78,46 @@ class OrderQuote extends BaseModel
         return ($this->deposit_percent ?: 50) / 100;
     }
 
+    /** What the customer has actually been charged so far. */
+    protected function paidAmount(): Attribute
+    {
+        return Attribute::get(fn (): float => round(
+            ($this->isDepositPaid() ? $this->deposit_amount : 0)
+            + ($this->isFinalPaid() ? $this->final_amount : 0),
+            2
+        ));
+    }
+
+    /** What is still owed. Derived from the total so the two always add back up. */
+    protected function outstandingAmount(): Attribute
+    {
+        return Attribute::get(fn (): float => round($this->total - $this->paid_amount, 2));
+    }
+
+    /**
+     * The two payments in order, each with whether and when it was taken. Both the
+     * order page and the order list read this, so they can never disagree.
+     *
+     * @return array<int, array{key: string, amount: float, paid: bool, paid_at: ?\Illuminate\Support\Carbon}>
+     */
+    public function milestones(): array
+    {
+        return [
+            [
+                'key' => 'deposit',
+                'amount' => $this->deposit_amount,
+                'paid' => $this->isDepositPaid(),
+                'paid_at' => $this->deposit_paid_at,
+            ],
+            [
+                'key' => 'final',
+                'amount' => $this->final_amount,
+                'paid' => $this->isFinalPaid(),
+                'paid_at' => $this->final_paid_at,
+            ],
+        ];
+    }
+
     public function isQuoted(): bool
     {
         return (bool) $this->quoted_at;
