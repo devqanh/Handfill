@@ -1,0 +1,10 @@
+{
+    "id": "botble/handfill",
+    "name": "Handfill",
+    "namespace": "Theme\\Handfill\\",
+    "author": "Handfill",
+    "url": "https://handfill.com",
+    "version": "1.0.0",
+    "description": "Handfill - Hand embroidery fulfillment marketplace. Inherits Shofy.",
+    "required_plugins": ["ecommerce"]
+}

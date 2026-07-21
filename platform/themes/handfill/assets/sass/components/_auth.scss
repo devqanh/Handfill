@@ -1,0 +1,644 @@
+// ---------------------------------------------------------------------------
+// Split-screen auth pages (login / register / forgot / reset password)
+// Markup: views/ecommerce/customers/forms/auth.blade.php
+// ---------------------------------------------------------------------------
+
+.hf-auth {
+    display: flex;
+    min-height: 100vh;
+    font-family: var(--hf-font-sans);
+
+    // -----------------------------------------------------------------------
+    // Left: dark brand panel (desktop only)
+    // -----------------------------------------------------------------------
+    &__brand {
+        display: none;
+        position: relative;
+        flex-direction: column;
+        justify-content: space-between;
+        overflow: hidden;
+        padding: 2.5rem;
+        background-color: var(--hf-ink);
+
+        @media (min-width: $hf-breakpoint-lg) {
+            display: flex;
+            flex: 0 0 42%;
+            max-width: 42%;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        @media (min-width: $hf-breakpoint-xl) {
+            padding: 3.5rem;
+        }
+    }
+
+    &__glow {
+        position: absolute;
+        width: 24rem;
+        height: 24rem;
+        border-radius: 50%;
+        filter: blur(64px);
+        pointer-events: none;
+
+        &--top {
+            top: -10rem;
+            inset-inline-end: -5rem;
+            background-color: rgba(var(--hf-primary-rgb), 0.08);
+        }
+
+        &--bottom {
+            bottom: -10rem;
+            inset-inline-start: -5rem;
+            background-color: rgba(var(--hf-primary-rgb), 0.05);
+        }
+    }
+
+    &__brand-top,
+    &__quote {
+        position: relative;
+        z-index: 1;
+    }
+
+    &__brand-logo {
+        display: inline-block;
+        margin-bottom: 2.25rem;
+
+        img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+    }
+
+    &__brand-title {
+        margin-bottom: 1rem;
+        color: #fff;
+        font-size: 1.875rem;
+        font-weight: 700;
+        line-height: 1.375;
+
+        @media (min-width: $hf-breakpoint-xl) {
+            font-size: 2.25rem;
+        }
+
+        .hf-accent {
+            color: var(--hf-primary);
+        }
+    }
+
+    &__brand-lead {
+        margin-bottom: 1.75rem;
+        color: var(--hf-gray-400);
+        line-height: 1.625;
+    }
+
+    // Perks list
+    &__perks {
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+        margin: 0 0 1.75rem;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__perk {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--hf-gray-300);
+        font-size: 0.875rem;
+    }
+
+    &__perk-icon {
+        display: inline-flex;
+        flex: 0 0 2rem;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 0.5rem;
+        background-color: rgba(var(--hf-primary-rgb), 0.2);
+        color: var(--hf-primary);
+
+        svg {
+            width: 15px;
+            height: 15px;
+        }
+    }
+
+    // Stats row
+    &__stats {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    &__stat {
+        padding: 0.75rem;
+        border: 1px solid rgb(255 255 255 / 10%);
+        border-radius: var(--hf-radius);
+        background-color: rgb(255 255 255 / 5%);
+        text-align: center;
+    }
+
+    &__stat-value {
+        margin: 0;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    &__stat-label {
+        margin: 0.125rem 0 0;
+        color: var(--hf-gray-500);
+        font-size: 0.75rem;
+    }
+
+    // Testimonial
+    &__quote {
+        margin: 1.5rem 0 0;
+        padding: 1.25rem;
+        border: 1px solid rgb(255 255 255 / 10%);
+        border-radius: var(--hf-radius-lg);
+        background-color: rgb(255 255 255 / 5%);
+
+        // Shofy styles bare <blockquote> with a filled background — reset it.
+        blockquote {
+            margin: 0 0 0.75rem;
+            padding: 0;
+            border: 0;
+            background: none;
+            color: var(--hf-gray-300);
+            font-size: 0.875rem;
+            font-style: normal;
+            line-height: 1.625;
+
+            &::before,
+            &::after {
+                content: none;
+            }
+        }
+    }
+
+    &__quote-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    &__avatar {
+        display: inline-flex;
+        flex: 0 0 2.25rem;
+        align-items: center;
+        justify-content: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 50%;
+        background-color: var(--hf-primary);
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 700;
+    }
+
+    &__quote-name {
+        display: block;
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    &__quote-role {
+        display: block;
+        color: var(--hf-gray-400);
+        font-size: 0.75rem;
+    }
+
+    // -----------------------------------------------------------------------
+    // Right: form panel
+    // -----------------------------------------------------------------------
+    &__panel {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        padding: 3rem 1.5rem;
+        background-color: #fff;
+    }
+
+    &__mobile-logo {
+        display: block;
+        margin-bottom: 2rem;
+
+        img {
+            height: 36px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        @media (min-width: $hf-breakpoint-lg) {
+            display: none;
+        }
+    }
+
+    &__form {
+        width: 100%;
+        max-width: 28rem;
+    }
+
+    &__heading {
+        margin-bottom: 0.25rem;
+        color: var(--hf-gray-900);
+        font-size: 1.5rem;
+        font-weight: 700;
+
+        @media (min-width: $hf-breakpoint-md) {
+            font-size: 1.875rem;
+        }
+    }
+
+    &__subheading {
+        margin-bottom: 2rem;
+        color: var(--hf-gray-400);
+        font-size: 0.875rem;
+    }
+
+    &__divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin: 1.25rem 0;
+        color: var(--hf-gray-400);
+        font-size: 0.75rem;
+
+        &::before,
+        &::after {
+            content: '';
+            flex: 1 1 auto;
+            height: 1px;
+            background-color: var(--hf-gray-100);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Form controls inside the auth panel
+// Botble renders the fields; we only restyle them.
+// ---------------------------------------------------------------------------
+.hf-auth {
+    a {
+        color: var(--hf-primary);
+        font-weight: 600;
+        text-decoration: none;
+
+        &:hover {
+            text-decoration: underline;
+        }
+    }
+
+    .form-group {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.375rem;
+        color: var(--hf-gray-700);
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 1px solid var(--hf-gray-200);
+        border-radius: var(--hf-radius);
+        background-color: var(--hf-gray-50);
+        color: var(--hf-gray-900);
+        font-size: 0.875rem;
+        line-height: 1.5;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+        &::placeholder {
+            color: var(--hf-gray-400);
+        }
+
+        &:focus {
+            outline: none;
+            border-color: var(--hf-primary);
+            box-shadow: 0 0 0 3px rgba(var(--hf-primary-rgb), 0.3);
+        }
+
+        &.is-invalid {
+            border-color: var(--hf-danger);
+
+            &:focus {
+                box-shadow: 0 0 0 3px rgb(239 68 68 / 20%);
+            }
+        }
+
+        // Botble adds .ps-5 whenever the field option declares an icon.
+        &.ps-5 {
+            padding-inline-start: 2.75rem !important;
+        }
+    }
+
+    // Icon rendered by Botble's HasIcon trait, wrapped in .position-relative
+    .auth-input-icon {
+        position: absolute;
+        inset-inline-start: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 3;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: var(--hf-gray-400);
+        pointer-events: none;
+
+        svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 1.75;
+        }
+    }
+
+    // Password reveal toggle shipped by core's password field
+    .input-group {
+        position: relative;
+        display: block;
+    }
+
+    .input-password-toggle {
+        position: absolute;
+        inset-inline-end: 0;
+        top: 0;
+        z-index: 3;
+        display: inline-flex;
+        align-items: center;
+        height: 100%;
+        padding: 0 1rem;
+        color: var(--hf-gray-400);
+        cursor: pointer;
+
+        &:hover {
+            color: var(--hf-gray-600);
+        }
+
+        svg {
+            width: 17px;
+            height: 17px;
+        }
+    }
+
+    // Checkboxes: remember me / terms
+    .form-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        min-height: auto;
+        margin: 0;
+        padding: 0;
+    }
+
+    .form-check-input {
+        flex: 0 0 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin: 0.0625rem 0 0;
+        border: 2px solid var(--hf-gray-300);
+        border-radius: 0.25rem;
+        cursor: pointer;
+
+        &:checked {
+            border-color: var(--hf-primary);
+            background-color: var(--hf-primary);
+        }
+
+        &:focus {
+            border-color: var(--hf-primary);
+            box-shadow: 0 0 0 3px rgba(var(--hf-primary-rgb), 0.25);
+        }
+    }
+
+    .form-check-label {
+        margin: 0;
+        color: var(--hf-gray-600);
+        font-size: 0.875rem;
+        font-weight: 400;
+        line-height: 1.4;
+        cursor: pointer;
+    }
+
+    // Submit
+    .btn-auth-submit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 1rem;
+        border: 0;
+        border-radius: var(--hf-radius);
+        background-color: var(--hf-ink);
+        box-shadow: var(--hf-shadow-lg);
+        color: #fff;
+        font-size: 0.875rem;
+        font-weight: 700;
+        transition: background-color 0.2s ease;
+
+        &:hover,
+        &:focus {
+            background-color: var(--hf-ink-hover);
+            color: #fff;
+        }
+
+        svg {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    .d-grid {
+        margin-top: 0.25rem;
+    }
+
+    // Alerts
+    .alert {
+        margin-bottom: 1.25rem;
+        padding: 0.875rem 1rem;
+        border: 0;
+        border-radius: var(--hf-radius);
+        font-size: 0.875rem;
+    }
+
+    .alert-success {
+        background-color: rgb(34 197 94 / 10%);
+        color: #15803d;
+    }
+
+    .alert-danger {
+        background-color: rgb(239 68 68 / 10%);
+        color: #b91c1c;
+    }
+
+    .alert-warning {
+        background-color: rgb(245 158 11 / 10%);
+        color: #b45309;
+    }
+
+    .invalid-feedback,
+    .text-danger {
+        display: block;
+        margin-top: 0.375rem;
+        color: var(--hf-danger) !important;
+        font-size: 0.75rem;
+
+        &[hidden] {
+            display: none;
+        }
+    }
+
+    // "Remember me" + "Forgot password?" share one row emitted by LoginForm.
+    .row.g-0 {
+        align-items: center;
+    }
+
+    // The strength meter is a sibling of the password .form-group, so pull it
+    // back up under the input it describes.
+    .form-group + .hf-password-strength {
+        margin-top: -1rem;
+        margin-bottom: 1.25rem;
+    }
+
+    // Bottom "Don't have an account?" link block
+    .mt-3.text-center {
+        margin-top: 1.5rem !important;
+        color: var(--hf-gray-400);
+        font-size: 0.875rem;
+
+        // Botble marks these links .text-decoration-underline; the design doesn't.
+        .text-decoration-underline {
+            text-decoration: none !important;
+
+            &:hover {
+                text-decoration: underline !important;
+            }
+        }
+    }
+
+    // Social login buttons injected via BASE_FILTER_AFTER_LOGIN_OR_REGISTER_FORM
+    .social-login,
+    .btn-social-login-wrapper {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+
+        a,
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.625rem;
+            padding: 0.75rem;
+            border: 1px solid var(--hf-gray-200);
+            border-radius: var(--hf-radius);
+            background-color: #fff;
+            color: var(--hf-gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+
+            &:hover {
+                background-color: var(--hf-gray-50);
+                text-decoration: none;
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Phone field with country-code selection (intl-tel-input, register page)
+// ---------------------------------------------------------------------------
+.hf-auth {
+    .iti {
+        display: block;
+        width: 100%;
+
+        &__flag-container {
+            padding: 0;
+        }
+
+        &__selected-flag {
+            padding: 0 0.5rem 0 0.75rem;
+            border-inline-end: 1px solid var(--hf-gray-200);
+            border-start-start-radius: var(--hf-radius);
+            border-end-start-radius: var(--hf-radius);
+            background-color: var(--hf-gray-100);
+        }
+
+        &__country-list {
+            margin-top: 0.25rem;
+            border: 1px solid var(--hf-gray-200);
+            border-radius: var(--hf-radius);
+            box-shadow: 0 12px 24px -8px rgb(0 0 0 / 15%);
+            font-size: 0.875rem;
+        }
+
+        &__country.iti__highlight {
+            background-color: rgba(var(--hf-primary-rgb), 0.1);
+        }
+
+        // intl-tel-input sizes this with inline styles that don't account for our
+        // taller inputs, so pin the offset to the flag box width.
+        .form-control {
+            padding-inline-start: 4.25rem !important;
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Password strength meter (assets/js/handfill.js)
+// ---------------------------------------------------------------------------
+.hf-password-strength {
+    display: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+
+    &.is-visible {
+        display: flex;
+    }
+
+    &__bars {
+        display: flex;
+        flex: 1 1 auto;
+        gap: 0.25rem;
+    }
+
+    &__bar {
+        flex: 1 1 0;
+        height: 4px;
+        border-radius: 9999px;
+        background-color: var(--hf-gray-200);
+        transition: background-color 0.2s ease;
+    }
+
+    &__label {
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    &[data-score='1'] &__bar.is-on { background-color: #f87171; }
+    &[data-score='2'] &__bar.is-on { background-color: #facc15; }
+    &[data-score='3'] &__bar.is-on { background-color: #60a5fa; }
+    &[data-score='4'] &__bar.is-on { background-color: #22c55e; }
+
+    &[data-score='1'] &__label { color: #f87171; }
+    &[data-score='2'] &__label { color: #eab308; }
+    &[data-score='3'] &__label { color: #3b82f6; }
+    &[data-score='4'] &__label { color: #22c55e; }
+}

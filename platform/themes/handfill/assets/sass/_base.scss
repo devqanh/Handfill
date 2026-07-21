@@ -1,0 +1,7 @@
+// Global overrides on top of the inherited Shofy stylesheet.
+// The font family itself is owned by Botble's typography system
+// (see functions/typography.php) — don't hard-code it here.
+
+body {
+    color: var(--hf-gray-900);
+}

@@ -1,0 +1,51 @@
+// ---------------------------------------------------------------------------
+// Handfill design tokens
+// Ported 1:1 from the Next/Tailwind reference (Handfill-Web-Design) so the two
+// stay in sync. Everything else (Bootstrap 5.3.3, Shofy layout vars) is
+// inherited from the Shofy parent theme.
+// ---------------------------------------------------------------------------
+
+:root {
+    // Brand
+    --hf-primary: #22c55e; // hsl(142 71% 45%)
+    --hf-primary-rgb: 34, 197, 94;
+    --hf-primary-hover: #16a34a;
+    --hf-ink: #0b1120; // brand panel + primary button
+    --hf-ink-hover: #1f2937;
+
+    // Neutrals (Tailwind gray scale used by the reference design)
+    --hf-gray-50: #f9fafb;
+    --hf-gray-100: #f3f4f6;
+    --hf-gray-200: #e5e7eb;
+    --hf-gray-300: #d1d5db;
+    --hf-gray-400: #9ca3af;
+    --hf-gray-500: #6b7280;
+    --hf-gray-600: #4b5563;
+    --hf-gray-700: #374151;
+    --hf-gray-900: #111827;
+
+    // Feedback
+    --hf-danger: #ef4444;
+    --hf-warning: #f59e0b;
+    --hf-info: #3b82f6;
+    --hf-success: #22c55e;
+
+    // Shape & type
+    --hf-radius: 0.75rem;
+    --hf-radius-lg: 1rem;
+    // --primary-font comes from Botble's typography system (functions/typography.php
+    // defaults it to Be Vietnam Pro and self-hosts it), so the admin stays in control.
+    --hf-font-sans: var(--primary-font, 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', sans-serif);
+    --hf-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 10%), 0 4px 6px -4px rgb(0 0 0 / 10%);
+
+    // Keep the Shofy/Bootstrap primary in sync with the Handfill brand so the
+    // inherited components (buttons, links, badges) recolour for free.
+    --primary-color: #22c55e;
+    --primary-color-rgb: 34, 197, 94;
+    --bs-primary: #22c55e;
+    --bs-primary-rgb: 34, 197, 94;
+}
+
+$hf-breakpoint-md: 768px;
+$hf-breakpoint-lg: 992px;
+$hf-breakpoint-xl: 1200px;
