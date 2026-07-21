@@ -9,8 +9,10 @@
     ]);
 @endphp
 
+{{-- The terms checkbox is dropped: RegisterRequest validates it with "sometimes", so it stays optional. --}}
 {!! $form
     ->template(Theme::getThemeNamespace('views.ecommerce.customers.forms.auth'))
+    ->remove('agree_terms_and_policy')
     ->setFormOption('authPanel', 'register')
     ->setFormOption('authHeading', __('Create an account'))
     ->setFormOption('authSubheading', $subheading)

@@ -12,6 +12,7 @@ use Botble\Ecommerce\Models\OrderProduct;
 use Botble\HandmadeWorkflow\Enums\ProductionStatusEnum;
 use Botble\Media\Facades\RvMedia;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -29,7 +30,7 @@ class CustomOrderService
      * Turn a customer's made-to-order request into an Order sitting at step 1
      * (Chờ duyệt). Price stays 0 until HF quotes it in phase 3.
      *
-     * @param  array{customer_group: string, expected_date?: string|null, note?: string|null, items: array<int, array{name: string, note?: string|null, qty: int, images?: array<int, UploadedFile>|null}>}  $data
+     * @param  array{customer_group: string, expected_date?: string|null, note?: string|null, address_id?: int|string|null, items: array<int, array<string, mixed>>}  $data
      */
     public function create(Customer $customer, array $data): Order
     {
@@ -42,8 +43,15 @@ class CustomOrderService
                 'name' => $item['name'],
                 'note' => $item['note'] ?? null,
                 'qty' => (int) $item['qty'],
-                'marketplace_id' => $item['marketplace_id'] ?? null,
+                'marketplace_order_id' => $item['marketplace_order_id'] ?? null,
+                'sku' => $item['sku'] ?? null,
+                'ordered_at' => $item['ordered_at'] ?? null,
+                // Files the customer picked in the browser live on our storage; photos
+                // that came in from a sheet stay as the customer's own links.
                 'images' => $this->uploadImages($item['images'] ?? []),
+                'image_links' => array_values($item['image_links'] ?? []),
+                'fabric_links' => array_values($item['fabric_image_links'] ?? []),
+                'recipient' => $this->cleanRecipient($item['recipient'] ?? []),
             ];
         }
 
@@ -70,7 +78,7 @@ class CustomOrderService
             $order->setOrderMetadata(self::META_IS_CUSTOM, '1');
             $order->setOrderMetadata(self::META_CUSTOMER_GROUP, $data['customer_group']);
 
-            $this->copyShippingAddress($order, $customer, $data['address_id'] ?? null);
+            $this->attachShippingAddress($order, $customer, $data['address_id'] ?? null, $uploadedItems);
 
             if (! empty($data['expected_date'])) {
                 $order->setOrderMetadata(self::META_EXPECTED_DATE, $data['expected_date']);
@@ -84,18 +92,13 @@ class CustomOrderService
                     // The first photo doubles as the line thumbnail (leaving it empty
                     // makes core draw a placeholder). The gallery below therefore starts
                     // from the second photo so nothing is shown twice.
-                    'product_image' => $item['images'][0] ?? null,
+                    'product_image' => $this->thumbnail($item),
                     'qty' => $item['qty'],
                     'price' => 0, // set when HF quotes the order
                     'tax_amount' => 0,
                     'weight' => 0,
                     'options' => [
-                        'handmade' => [
-                            'is_custom' => true,
-                            'note' => $item['note'],
-                            'marketplace_id' => $item['marketplace_id'] ?? null,
-                            'images' => $item['images'],
-                        ],
+                        'handmade' => array_merge(['is_custom' => true], Arr::except($item, ['name', 'qty'])),
                     ],
                 ]);
             }
@@ -105,22 +108,51 @@ class CustomOrderService
     }
 
     /**
-     * Snapshot the customer's saved address onto the order. It is copied (not referenced)
-     * so later edits to the address book do not rewrite a placed order's delivery details.
+     * Give the order a delivery address. Normally that is the one picked from the
+     * customer's address book; for an imported marketplace sheet there is none, so
+     * the first line's own recipient stands in — core screens and the invoice all
+     * read this record and would otherwise show a blank.
+     *
+     * @param  array<int, array<string, mixed>>  $items
      */
-    protected function copyShippingAddress(Order $order, Customer $customer, int|string|null $addressId): void
-    {
-        if (! $addressId) {
+    protected function attachShippingAddress(
+        Order $order,
+        Customer $customer,
+        int|string|null $addressId,
+        array $items
+    ): void {
+        if ($addressId && $this->copyShippingAddress($order, $customer, $addressId)) {
             return;
         }
 
+        foreach ($items as $item) {
+            if (! empty($item['recipient']['name'])) {
+                OrderAddress::query()->create([
+                    'order_id' => $order->getKey(),
+                    'type' => OrderAddressTypeEnum::SHIPPING,
+                    'name' => $item['recipient']['name'],
+                    'email' => $item['recipient']['email'] ?: $customer->email,
+                    'address' => $item['recipient']['address'],
+                ]);
+
+                return;
+            }
+        }
+    }
+
+    /**
+     * Snapshot the customer's saved address onto the order. It is copied (not referenced)
+     * so later edits to the address book do not rewrite a placed order's delivery details.
+     */
+    protected function copyShippingAddress(Order $order, Customer $customer, int|string $addressId): bool
+    {
         $address = Address::query()
             ->where('id', $addressId)
             ->where('customer_id', $customer->getKey())
             ->first();
 
         if (! $address) {
-            return;
+            return false;
         }
 
         OrderAddress::query()->create([
@@ -135,6 +167,45 @@ class CustomOrderService
             'address' => $address->address,
             'zip_code' => $address->zip_code,
         ]);
+
+        return true;
+    }
+
+    /**
+     * The line thumbnail. `RvMedia::getImageUrl()` hands absolute URLs straight back,
+     * so a customer's own link renders here just as an uploaded file would — as long
+     * as it fits the column, which is varchar(255).
+     *
+     * @param  array<string, mixed>  $item
+     */
+    protected function thumbnail(array $item): ?string
+    {
+        if ($first = $item['images'][0] ?? null) {
+            return $first;
+        }
+
+        foreach ($item['image_links'] as $link) {
+            if (strlen($link) <= 255) {
+                return $link;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $recipient
+     * @return array{name: string, email: string, address: string}|null
+     */
+    protected function cleanRecipient(array $recipient): ?array
+    {
+        $clean = [
+            'name' => trim((string) ($recipient['name'] ?? '')),
+            'email' => trim((string) ($recipient['email'] ?? '')),
+            'address' => trim((string) ($recipient['address'] ?? '')),
+        ];
+
+        return array_filter($clean) === [] ? null : $clean;
     }
 
     /**
@@ -166,7 +237,7 @@ class CustomOrderService
     /**
      * Custom items attached to an order, ready for display.
      *
-     * @return array<int, array{name: string, note: ?string, qty: int, images: array<int, string>}>
+     * @return array<int, array<string, mixed>>
      */
     public static function customItems(Order $order): array
     {
@@ -179,12 +250,11 @@ class CustomOrderService
                 continue;
             }
 
-            $items[] = [
+            $items[] = array_merge($handmade, [
                 'name' => $product->product_name,
-                'note' => $handmade['note'] ?? null,
                 'qty' => (int) $product->qty,
                 'images' => $handmade['images'] ?? [],
-            ];
+            ]);
         }
 
         return $items;

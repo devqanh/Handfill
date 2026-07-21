@@ -241,5 +241,149 @@ Chi tiết cả hai bẫy nằm trong `docs/botble-plugin-guide.md`.
   - Có khối tổng kết **tính trực tiếp khi gõ**: tổng SP → tổng cộng → tiền cọc → còn lại, để nhân viên thấy số cọc trước khi bấm gửi. Công thức JS khớp đúng công thức máy chủ (cọc = 50% SP + ship; còn lại = tổng − cọc).
   - Dòng nào không gửi lên (form cũ/lệch) thì **giữ nguyên giá cũ**, không bị reset về 0.
 
+## 12. Nhập đơn hàng loạt từ file Excel — ✅ ĐÃ XONG (21/07/2026)
+
+Khách gửi file `dev/MrChinh-Handfill-Order.csv` (đơn fulfill hộ Amazon/Etsy). Đối chiếu
+với form đặt hàng cũ thì **thiếu 6 nhóm dữ liệu**, nay đã bổ sung.
+
+### Cột trong file khách ↔ dữ liệu hệ thống
+| Cột file khách | Trước đây | Nay lưu ở |
+|---|---|---|
+| Sản phẩm, Số lượng, Personalization | ✅ đã có | `ec_order_product.product_name` / `qty` / `options.handmade.note` |
+| Ảnh SP (link) | ⚠️ chỉ upload file | tự tải về `options.handmade.images` |
+| Order ID (mã đơn sàn) | ❌ | `options.handmade.marketplace_order_id` |
+| SKU | ❌ | `options.handmade.sku` |
+| Ngày order | ❌ | `options.handmade.ordered_at` |
+| Ảnh màu vải | ❌ | `options.handmade.fabric_images` |
+| INFO SHIPPING | ❌ (chỉ 1 địa chỉ/đơn) | `options.handmade.recipient` **theo từng dòng** |
+| Email người nhận | ❌ | `options.handmade.recipient.email` |
+
+**Không tạo bảng mới**: tất cả nằm trong cột JSON `ec_order_product.options` dưới khoá
+`handmade`, đúng cách giai đoạn 2 đã chọn — thêm cột vào bảng lõi của ecommerce sẽ vỡ
+khi core cập nhật.
+
+### Quyết định đã chốt (21/07/2026)
+| # | Vấn đề | Chốt |
+|---|---|---|
+| 11 | Mỗi dòng một người nhận khác nhau | **Lưu người nhận riêng theo dòng**. Địa chỉ chung trong sổ địa chỉ thành **tùy chọn**; nếu bỏ trống thì `ec_order_addresses` lấy người nhận của dòng đầu (để hoá đơn và màn hình core không trống) |
+| 12 | Luồng import | **Đọc file → xem trước trong form → khách bấm gửi**. Không tạo đơn thẳng từ file |
+| 13 | File mẫu | **Chỉ .xlsx**; khi tải lên vẫn nhận .xlsx/.ods/.csv |
+| 14 | Link ảnh | **Chỉ lưu link, KHÔNG tải ảnh về máy chủ.** Xem "đảo quyết định" bên dưới |
+| 15 | Trường `marketplace_id` (ID listing trên sàn, thêm ở commit deeb54ef) | **Bỏ hẳn.** Trùng công dụng với Order ID + SKU, mà nhãn "ID sàn" còn dễ đọc nhầm thành mã đơn. Dữ liệu cũ nằm lại trong JSON, vô hại |
+| 16 | Link hỏng | **Chặn không cho gửi đơn.** Đã không giữ bản sao thì link chết = đơn không còn gì để làm |
+
+### Đảo quyết định #14 — bỏ tải ảnh về (21/07/2026)
+Bản đầu tải ảnh về media library ngay khi đọc file. Chạy thật thì **~3,6s/ảnh** — 3 dòng mất
+18s, 50 dòng sẽ vượt timeout. Đã thử vá bằng hạn mức 90s, rồi tính tới chunk AJAX, nhưng
+cuối cùng chốt **bỏ hẳn việc tải về**: hệ thống lưu đúng link khách đưa.
+
+- Đọc file **dưới 1 giây**, không còn bài toán timeout/chunk/queue nào nữa.
+- `RvMedia::getImageUrl()` trả nguyên link tuyệt đối, nên ảnh remote hiển thị y hệt ảnh
+  đã upload — kể cả ô thumbnail của dòng hàng (`ec_order_product.product_image`, chỉ dùng
+  link khi độ dài ≤ 255 vì cột là `varchar(255)`).
+- **Đổi lại phải kiểm link** (quyết định #16), vì không còn bản sao dự phòng.
+
+**Đánh đổi phải biết:** link khách hết hạn / bị xoá thì đơn mất ảnh, có thể xảy ra vài tuần
+sau khi đặt, đúng lúc vào xưởng. Ô nhập link ghi rõ "giữ link tới khi giao xong". Nếu sau này
+thấy đau, thêm bước lưu bản sao **sau khi đơn đã tạo** (chạy nền) — cấu trúc dữ liệu không
+phải đổi vì `images` (file upload) và `image_links` đã tách sẵn.
+
+### Kiểm tra link (`ImageLinkChecker`)
+3 kết quả, không phải 2 — vì thực tế file khách trộn cả link ảnh trực tiếp lẫn trang chia sẻ:
+
+| Kết quả | Nghĩa | Xử lý |
+|---|---|---|
+| `image` | Trả về `Content-Type: image/*` | Hiện ảnh xem trước |
+| `page` | Mở được nhưng là trang web (prnt.sc, Drive) | **Cho qua**, gắn nhãn vàng — nhân viên vẫn bấm xem được |
+| `broken` | Lỗi mạng, 4xx/5xx, hoặc host nội bộ | **Chặn gửi đơn** |
+
+- Hỏi bằng **HEAD** trước (rẻ nhất); gặp 403/405/501 mới hỏi lại bằng GET kèm `Range: bytes=0-0`
+  — nhiều host cấm HEAD, và URL ký sẵn của S3 thường chỉ ký cho GET.
+- `Http::pool()` 10 link một lượt + cache 10 phút, nên kiểm cả sheet tốn vài giây.
+- Chặn luôn host phân giải ra IP nội bộ — link do khách nhập, không để thành đường dò mạng nội bộ.
+- Kiểm ở **cả hai đầu**: lúc đọc file (để khách sửa ngay khi còn mở sheet) và lúc gửi đơn
+  (server mới là nơi quyết định — trình duyệt gửi gì lên cũng được).
+
+### Đã làm
+- `CustomOrderImportSchema` — **nguồn chân lý duy nhất** cho 10 cột: vừa sinh file mẫu
+  vừa đọc file tải lên. Tiêu đề cột **không dịch** (là định dạng dữ liệu, không phải UI):
+  dịch sang tiếng Anh là file cũ của khách hết import được.
+- `CustomOrderTemplateWriter` — sinh .xlsx tại chỗ: sheet 1 chỉ có dòng tiêu đề (cột bắt
+  buộc tô đỏ, có comment giải thích, khoá dòng tiêu đề, cột mã/ngày ép kiểu text để Excel
+  không biến `4112788779` thành `4.11279E+09`), sheet 2 là bảng hướng dẫn + ví dụ.
+  **Không để dòng ví dụ ở sheet 1** — nó sẽ được import thành sản phẩm thật.
+- `CustomOrderImporter` — đọc .xlsx/.ods/.csv qua `SimpleExcelReader`; tự dò dấu phân cách
+  `,`/`;`; tự bỏ qua dòng rác phía trên bảng; ghép tiêu đề bằng cách bỏ dấu + bỏ ký tự đặc
+  biệt nên "Ảnh màu vải (nếu có)" ≡ "anh mau vai"; tách INFO SHIPPING thành tên (dòng đầu)
+  + địa chỉ (các dòng sau).
+- `ImageLinkChecker` — kiểm link mở được hay không (bảng ở trên).
+- Ô nhập **link ảnh mẫu** và **link ảnh màu vải** là textarea (mỗi dòng một link) chứ không
+  phải input ẩn: link import về mà chết thì khách phải sửa được ngay tại chỗ. Server tách
+  chuỗi thành mảng ở `prepareForValidation()` nên toàn bộ rule mảng dùng lại được.
+- Trang khách `customer/custom-orders/create` **làm lại bố cục** (xem mục dưới).
+- Hiển thị đầy đủ các trường mới ở **cả** trang đơn của khách lẫn bảng sản phẩm trong admin
+  (dùng chung file `cart-item-options-extras.blade.php` nên chỉ sửa một chỗ).
+- Nâng giới hạn: **50 sản phẩm/đơn** (cũ 10) — file thật của khách dài hơn 10 dòng nhiều.
+
+### Bố cục trang đặt hàng — làm lại (21/07/2026)
+Trước: một chồng thẻ trắng giống hệt nhau, mỗi sản phẩm là một thẻ cao gần full màn hình →
+10 sản phẩm là 10 màn hình cuộn, không nhìn ra cấu trúc.
+
+- Bỏ thẻ tiêu đề đầu trang (layout `customers.master` **đã in tiêu đề rồi** — trùng lặp).
+- Thêm dải **3 bước** ngắn gọn để khách biết gửi xong thì chuyện gì xảy ra.
+- Mỗi sản phẩm là một **dòng gấp/mở** (`<details>`): đóng lại chỉ thấy `#1 · Tên · SL · SKU ·
+  Người nhận`; mở ra mới thấy form, chia thành 3 nhóm có tiêu đề (Thông tin sản phẩm /
+  Ảnh mẫu / Người nhận). Import 50 dòng ra một **danh sách đọc được**, chỉ mở dòng đầu.
+- Ảnh xem trước là **ô 120px**, không phải tem thư — đây là ảnh để làm ra sản phẩm, xem
+  không rõ thì bằng không xem. Mỗi link là một ô kèm nhãn kết quả kiểm (ảnh OK / mở được,
+  không phải ảnh / không mở được).
+- **Thanh gửi dính đáy màn hình** — không phải cuộn hết 50 dòng mới bấm gửi được.
+- Khối import thành **vùng kẻ nét đứt** riêng, nút tải file mẫu nằm ngay ở tiêu đề khối.
+- CSS đặt inline trong view, tiền tố `hw-`: cùng lý do với `<script>` (layout theme không có
+  `@stack`), và để cả màn hình nằm gọn trong một file.
+
+### Đã kiểm chứng (chạy thật qua HTTP, có đăng nhập)
+- Đọc đúng **cả 3 dòng** file thật của khách: tên, SL, SKU, Order ID, ghi chú nhiều dòng,
+  người nhận + email từng dòng.
+- **Tải được cả 5 ảnh**: 4 ảnh từ S3/zaytoka + ảnh màu vải từ **prnt.sc** (trang chia sẻ trả
+  về HTML, đã lần theo thẻ `og:image` để lấy ảnh gốc). 0 cảnh báo.
+- Gửi đơn thật → đơn `#SF-10000013` (3 dòng), mỗi dòng giữ đúng người nhận riêng;
+  `ec_order_addresses` tự lấy người nhận dòng đầu vì khách không chọn địa chỉ chung.
+- Trang đơn của khách hiện đủ: SKU, Order ID, ngày order, ảnh SP, ảnh màu vải, người nhận,
+  email, địa chỉ.
+- File mẫu .xlsx sinh ra **mở lại và import ngược được** (round-trip), gồm cả comment cột
+  và ràng buộc số lượng.
+- Đối chiếu asset với `customer/orders` bằng `comm -23`: **không thiếu file CSS/JS nào**,
+  các lớp vỏ tài khoản khớp số lượng.
+
+### Bẫy đã gặp
+8. **Ngày `10/7/2026` nhập nhằng d/m hay m/d.** Trong cùng file khách có `7/13/2026` (chắc
+   chắn m/d) lẫn `10/7/2026`. Chốt định dạng theo cả file thì `10/7` thành 7 tháng 10 — ngày
+   **trong tương lai**, vô lý với ngày đã đặt trên sàn. Cách xử lý: chốt định dạng theo file,
+   nhưng ô nào ra ngày tương lai mà đảo lại thành quá khứ thì đảo riêng ô đó.
+9. **`date_create_from_format` không báo lỗi khi tháng > 12** — `7/13/2026` đọc theo `d/m/Y`
+   lặng lẽ thành tháng 1/2027. Phải kiểm `date_get_last_errors()` sau mỗi lần parse.
+10. **Trường `required` nằm trong `<details>` đang đóng thì trình duyệt không submit được và
+    cũng không báo gì** (không focus được field ẩn). Đã bắt sự kiện `invalid` ở pha capture
+    để mở đúng dòng chứa lỗi.
+11. **`mimes:xlsx` loại nhầm file thật** — trình duyệt khai .xlsx là `application/octet-stream`,
+    .csv là `text/plain`. Dùng `extensions:` thay cho `mimes:`. `.xls` nhị phân cũ **không đọc
+    được** (openspout không hỗ trợ) nên không nhận.
+12. **Tải ảnh chậm hơn tưởng**: ~3,6s/ảnh → 50 dòng có thể vượt timeout. Đã đặt hạn mức 90s
+    cho toàn bộ lượt tải; quá hạn thì ảnh còn lại giữ nguyên dạng link kèm cảnh báo, thay vì
+    để cả lượt import chết.
+13. **`@json(...)` cuối dòng trong `<script>` nuốt luôn ký tự xuống dòng** → `const A = "x"const
+    B = ...` và **cả file JS chết** với `Uncaught SyntaxError: Unexpected token 'const'`. Trang
+    vẫn render bình thường nên chỉ lộ ra khi mở console. Bắt buộc **kết thúc bằng dấu `;`** ở
+    mọi dòng có directive Blade, dù phần còn lại của file viết theo kiểu không chấm phẩy.
+    (Đây là lý do `order-products.blade.php` truyền cấu hình qua `data-*` thay vì nhúng thẳng.)
+    Nghiệm thu JS từ nay: trích khối `<script>` trong HTML đã render rồi chạy `node --check`.
+
+### Còn nợ
+- Ảnh tải về ở bước xem trước mà khách **không gửi đơn** thì nằm lại trong media library.
+- Chưa đẩy các trường mới (SKU / Order ID / người nhận) sang Lark Base — làm cùng giai đoạn 4.
+
 ### Giai đoạn 4 sẽ làm
-Đồng bộ Lark 2 chiều: đẩy đơn + ảnh lên Base khi tạo/đổi trạng thái (đã có sẵn client), thêm `updateRecord()`, và bổ sung các cột còn thiếu trong Base.
+Đồng bộ Lark 2 chiều: đẩy đơn + ảnh lên Base khi tạo/đổi trạng thái (đã có sẵn client), thêm
+`updateRecord()`, và bổ sung các cột còn thiếu trong Base (nay gồm cả SKU, Order ID sàn,
+người nhận từng dòng).

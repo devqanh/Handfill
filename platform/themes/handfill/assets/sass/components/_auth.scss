@@ -592,11 +592,10 @@
             background-color: rgba(var(--hf-primary-rgb), 0.1);
         }
 
-        // intl-tel-input sizes this with inline styles that don't account for our
-        // taller inputs, so pin the offset to the flag box width.
-        .form-control {
-            padding-inline-start: 4.25rem !important;
-        }
+        // NB: never set padding-inline-start on .form-control here. intl-tel-input
+        // measures the flag box at init and writes the matching padding-left as an
+        // inline style; an !important rule here would freeze it at a wrong value and
+        // the dial code would overlap the placeholder.
     }
 }
 

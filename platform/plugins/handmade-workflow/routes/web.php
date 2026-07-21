@@ -19,6 +19,8 @@ Theme::registerRoutes(function (): void {
             ->name('customer.custom-orders.')
             ->group(function (): void {
                 Route::get('create', [CustomOrderController::class, 'create'])->name('create');
+                Route::get('template', [CustomOrderController::class, 'template'])->name('template');
+                Route::post('import', [CustomOrderController::class, 'import'])->name('import');
                 Route::post('/', [CustomOrderController::class, 'store'])->name('store');
             });
 
